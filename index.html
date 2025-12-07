@@ -4,14 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>행동 쑥쑥 카운터</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Noto Sans KR 폰트 -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* 커스텀 CSS (기존 스타일 유지 및 정리) */
         body {
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #F1F5F9; /* Slate-100 */
@@ -22,9 +18,9 @@
             transform: scale(0.98);
         }
         /* Custom Scrollbar */
-        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
         /* Token Animation */
         @keyframes popIn {
@@ -46,18 +42,11 @@
         @media (max-width: 640px) {
             .icon-grid { grid-template-columns: repeat(4, 1fr); gap: 0.25rem; }
         }
-        /* 프린트 시 차트 비율 문제 해결 */
-        @media print {
-            #resultChart {
-                max-height: 400px !important;
-                height: 400px !important;
-            }
-        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-gray-800 bg-slate-100">
 
-    <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 z-20 shrink-0 print:hidden">
+    <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 z-20 shrink-0">
         <div class="max-w-5xl mx-auto flex justify-between items-center w-full">
             <h1 class="text-xl md:text-2xl font-black text-emerald-600 flex items-center gap-2 cursor-pointer select-none" onclick="location.reload()">
                 <span>🌱</span> 행동 쑥쑥
@@ -73,7 +62,6 @@
 
     <main class="flex-1 overflow-hidden relative w-full max-w-5xl mx-auto md:p-6">
         
-        <!-- View: 홈 (학생 선택/관리) -->
         <section id="view-home" class="p-4 h-full flex flex-col justify-center items-center animate-fade-in overflow-y-auto">
             <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 w-full max-w-lg transition-all">
                 <div class="flex justify-between items-center mb-6 border-b pb-4">
@@ -83,9 +71,8 @@
                     <span class="text-xs font-bold text-gray-500 bg-gray-50 px-3 py-1 rounded-full">Step 0</span>
                 </div>
                 
-                <div id="student-list-container" class="space-y-3 max-h-80 overflow-y-auto mb-6 custom-scroll">
-                    <!-- 학생 목록이 여기에 렌더링됩니다 -->
-                </div>
+                <div id="student-list-container" class="space-y-3 max-h-80 overflow-y-auto mb-6">
+                    </div>
                 
                 <button id="start-all-tracking-btn" onclick="startAllStudentTracking()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-emerald-200 transition transform btn-press-effect flex justify-center items-center gap-2 mb-4 hidden">
                     <span>🚀 일괄 관찰 시작하기</span>
@@ -98,7 +85,6 @@
         </section>
 
 
-        <!-- View: 설정 (학생 이름, 행동) -->
         <section id="view-setup" class="p-4 h-full hidden flex-col justify-center items-center animate-fade-in overflow-y-auto">
             <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 w-full max-w-lg transition-all">
                 <div class="flex justify-between items-center mb-8">
@@ -111,30 +97,28 @@
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">학생 이름</label>
-                        <!-- input에 oninput으로 변경, 타이핑 즉시 저장되도록 (UX 향상) -->
-                        <input type="text" id="student-name" placeholder="예: 김사랑" oninput="saveConfig()" class="w-full h-14 px-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none transition text-lg font-bold text-gray-700 placeholder-gray-300">
+                        <input type="text" id="student-name" placeholder="예: 김사랑" onchange="saveConfig()" class="w-full h-14 px-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none transition text-lg font-bold text-gray-700 placeholder-gray-300">
                     </div>
 
                     <div>
                         <label class="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">관찰 목표 행동</label>
                         <div class="space-y-3" id="behavior-inputs">
-                            <!-- 행동 입력 필드 (최대 3개) -->
                             <div class="flex gap-3 items-center group" id="behavior-row-1">
                                 <button onclick="openIconPicker(1)" id="icon-btn-1" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">👀</button>
                                 <input type="hidden" id="icon-val-1" value="👀">
-                                <input type="text" id="behavior-1" value="눈 맞춤 하기" oninput="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 1 (필수)">
+                                <input type="text" id="behavior-1" value="눈 맞춤 하기" onchange="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 1">
                                 <button onclick="removeBehaviorInput(1)" class="w-10 h-10 flex-shrink-0 rounded-full bg-red-50 hover:bg-red-100 text-red-500 transition text-sm font-bold">X</button>
                             </div>
                             <div class="flex gap-3 items-center group" id="behavior-row-2">
                                 <button onclick="openIconPicker(2)" id="icon-btn-2" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">👂</button>
                                 <input type="hidden" id="icon-val-2" value="👂">
-                                <input type="text" id="behavior-2" value="바른 자세 유지" oninput="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 2 (선택)">
+                                <input type="text" id="behavior-2" value="바른 자세 유지" onchange="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 2">
                                 <button onclick="removeBehaviorInput(2)" class="w-10 h-10 flex-shrink-0 rounded-full bg-red-50 hover:bg-red-100 text-red-500 transition text-sm font-bold">X</button>
                             </div>
                             <div class="flex gap-3 items-center group" id="behavior-row-3">
                                 <button onclick="openIconPicker(3)" id="icon-btn-3" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">✨</button>
                                 <input type="hidden" id="icon-val-3" value="✨">
-                                <input type="text" id="behavior-3" value="" oninput="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 3 (선택)">
+                                <input type="text" id="behavior-3" value="" onchange="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 3 (선택)">
                                 <button onclick="removeBehaviorInput(3)" class="w-10 h-10 flex-shrink-0 rounded-full bg-red-50 hover:bg-red-100 text-red-500 transition text-sm font-bold">X</button>
                             </div>
                         </div>
@@ -152,7 +136,6 @@
             </div>
         </section>
 
-        <!-- View: 관찰 (카운터 및 로그) -->
         <section id="view-tracking" class="hidden h-full flex-col md:flex-row p-4 md:p-0 gap-6">
             
             <div class="flex-1 flex flex-col h-full min-h-0">
@@ -170,64 +153,58 @@
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto custom-scroll pb-2">
-                    <!-- 버튼 컨테이너는 동적으로 그리드 클래스가 변경됩니다 -->
+                <div class="flex-1 overflow-y-auto no-scrollbar pb-2">
                     <div id="buttons-container" class="grid gap-4 h-full md:h-auto content-start">
-                        <!-- 행동 카운터 버튼이 여기에 렌더링됩니다 -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
-            <!-- 통합 기록 로그 패널 -->
             <div class="h-48 md:h-full md:w-80 shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                     <h3 class="font-bold text-gray-600 text-sm flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> 통합 기록 (최근 50개)
+                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> 통합 기록
                     </h3>
                     <div class="flex gap-2">
-                         <button onclick="undoLastLog()" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 transition shadow-sm btn-press-effect">
+                         <button onclick="undoLastLog()" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 transition shadow-sm">
                             ↩ 취소
                         </button>
-                        <button onclick="stopAllTrackingAndGoHome()" class="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition shadow-sm btn-press-effect">
+                        <button onclick="stopAllTrackingAndGoHome()" class="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition shadow-sm">
                             전체 종료
                         </button>
                     </div>
                 </div>
-                <ul id="log-list" class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50/50 custom-scroll"></ul>
+                <ul id="log-list" class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50/50"></ul>
             </div>
         </section>
 
-        <!-- View: 리포트 -->
-        <section id="view-report" class="hidden h-full flex-col overflow-y-auto custom-scroll p-4 md:p-0 print:block">
+        <section id="view-report" class="hidden h-full flex-col overflow-y-auto no-scrollbar p-4 md:p-0">
             <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-6 w-full">
-                <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-100 pb-6 gap-6 print:block print:mb-4 print:border-none print:pb-0">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-100 pb-6 gap-6">
                     <div>
                         <h2 class="text-3xl font-black text-gray-800 mb-2">📊 <span id="report-student-name"></span> 관찰 리포트</h2> 
-                        <div class="flex gap-4 text-sm text-gray-500 font-medium print:block print:space-y-1 print:text-gray-700">
+                        <div class="flex gap-4 text-sm text-gray-500 font-medium">
                             <span id="report-date">2023. 00. 00</span>
-                            <span class="text-gray-300 print:hidden">|</span>
+                            <span class="text-gray-300">|</span>
                             <span>총 시간: <span id="report-duration" class="text-emerald-600 font-bold">00:00</span></span>
                         </div>
                     </div>
-                    <div class="flex gap-3 w-full md:w-auto print:hidden">
-                        <button onclick="switchView('home')" class="flex-1 md:flex-none px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 shadow-lg shadow-indigo-200 transition btn-press-effect">학생 관리 화면</button>
+                    <div class="flex gap-3 w-full md:w-auto">
+                        <button onclick="switchView('home')" class="flex-1 md:flex-none px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 shadow-lg shadow-indigo-200 transition">학생 관리 화면</button>
                         
-                        <button id="report-complete-btn" onclick="clearLatestReportAndGoHome()" class="flex-1 md:flex-none px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-200 transition btn-press-effect">리포트 완료/숨기기</button>
-                        <button onclick="window.print()" class="flex-1 md:flex-none px-6 py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition btn-press-effect">인쇄</button>
+                        <button id="report-complete-btn" onclick="clearLatestReportAndGoHome()" class="flex-1 md:flex-none px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-200 transition">리포트 완료/숨기기</button>
+                        <button onclick="window.print()" class="flex-1 md:flex-none px-6 py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition">인쇄</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 print:grid-cols-1 print:gap-4">
-                    <!-- 차트 컨테이너 -->
-                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 h-80 relative print:h-96 print:p-0 print:border-none print:bg-white">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 h-80 relative">
                         <canvas id="resultChart"></canvas>
                     </div>
-                    <!-- 데이터 테이블 -->
-                    <div class="overflow-hidden rounded-2xl border border-gray-100 print:border print:shadow-none">
+                    <div class="overflow-hidden rounded-2xl border border-gray-100">
                         <table class="w-full text-sm text-left text-gray-600">
                             <thead class="bg-gray-100 text-gray-500 uppercase text-xs font-bold">
                                 <tr>
                                     <th class="px-6 py-4">행동</th>
-                                    <th class="px-6 py-4 text-right">빈도 (스티커)</th>
+                                    <th class="px-6 py-4 text-right">빈도</th>
                                     <th class="px-6 py-4 text-right">비율</th>
                                 </tr>
                             </thead>
@@ -238,62 +215,58 @@
             </div>
         </section>
 
-        <!-- Modal: 아이콘 선택기 -->
-        <div id="icon-picker-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center animate-fade-in backdrop-blur-sm print:hidden">
+        <div id="icon-picker-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center animate-fade-in backdrop-blur-sm">
             <div class="bg-white w-full max-w-xl h-[70vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                     <h3 class="text-xl font-black text-gray-800">아이콘 선택</h3>
-                    <button onclick="closeIconPicker()" class="w-8 h-8 rounded-full bg-white hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold shadow-sm btn-press-effect">&times;</button>
+                    <button onclick="closeIconPicker()" class="w-8 h-8 rounded-full bg-white hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold shadow-sm">&times;</button>
                 </div>
                 
                 <div class="flex-1 overflow-y-auto p-6 bg-white custom-scroll">
                     <div class="space-y-6">
-                        <!-- 아이콘 카테고리 (학교 생활) -->
                         <div>
                             <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">🏫 학교 생활</h4>
                             <div class="icon-grid">
-                                <button onclick="selectIcon('👀')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">👀</button>
-                                <button onclick="selectIcon('👂')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">👂</button>
-                                <button onclick="selectIcon('🪑')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">🪑</button>
-                                <button onclick="selectIcon('✋')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">✋</button>
-                                <button onclick="selectIcon('✏️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">✏️</button>
-                                <button onclick="selectIcon('🎒')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">🎒</button>
-                                <button onclick="selectIcon('📒')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">📒</button>
-                                <button onclick="selectIcon('🏫')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">🏫</button>
-                                <button onclick="selectIcon('🍱')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">🍱</button>
-                                <button onclick="selectIcon('🚽')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition btn-press-effect">🚽</button>
+                                <button onclick="selectIcon('👀')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">👀</button>
+                                <button onclick="selectIcon('👂')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">👂</button>
+                                <button onclick="selectIcon('🪑')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🪑</button>
+                                <button onclick="selectIcon('✋')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">✋</button>
+                                <button onclick="selectIcon('✏️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">✏️</button>
+                                <button onclick="selectIcon('🎒')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🎒</button>
+                                <button onclick="selectIcon('📒')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">📒</button>
+                                <button onclick="selectIcon('🏫')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🏫</button>
+                                <button onclick="selectIcon('🍱')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🍱</button>
+                                <button onclick="selectIcon('🚽')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🚽</button>
                             </div>
                         </div>
-                        <!-- 아이콘 카테고리 (행동/활동) -->
                         <div>
                             <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">🏃 행동 / 활동</h4>
                             <div class="icon-grid">
-                                <button onclick="selectIcon('🚶')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🚶</button>
-                                <button onclick="selectIcon('🏃')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🏃</button>
-                                <button onclick="selectIcon('🗣️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🗣️</button>
-                                <button onclick="selectIcon('🤫')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🤫</button>
-                                <button onclick="selectIcon('🤝')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🤝</button>
-                                <button onclick="selectIcon('🙅')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🙅</button>
-                                <button onclick="selectIcon('🙆')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🙆</button>
-                                <button onclick="selectIcon('🎨')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🎨</button>
-                                <button onclick="selectIcon('🧩')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🧩</button>
-                                <button onclick="selectIcon('🧸')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition btn-press-effect">🧸</button>
+                                <button onclick="selectIcon('🚶')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🚶</button>
+                                <button onclick="selectIcon('🏃')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🏃</button>
+                                <button onclick="selectIcon('🗣️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🗣️</button>
+                                <button onclick="selectIcon('🤫')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🤫</button>
+                                <button onclick="selectIcon('🤝')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🤝</button>
+                                <button onclick="selectIcon('🙅')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🙅</button>
+                                <button onclick="selectIcon('🙆')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🙆</button>
+                                <button onclick="selectIcon('🎨')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🎨</button>
+                                <button onclick="selectIcon('🧩')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🧩</button>
+                                <button onclick="selectIcon('🧸')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🧸</button>
                             </div>
                         </div>
-                        <!-- 아이콘 카테고리 (보상/감정) -->
                         <div>
                             <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">❤️ 보상 / 감정</h4>
                             <div class="icon-grid">
-                                <button onclick="selectIcon('✨')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">✨</button>
-                                <button onclick="selectIcon('⭐')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">⭐</button>
-                                <button onclick="selectIcon('❤️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">❤️</button>
-                                <button onclick="selectIcon('👍')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">👍</button>
-                                <button onclick="selectIcon('😀')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">😀</button>
-                                <button onclick="selectIcon('😢')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">😢</button>
-                                <button onclick="selectIcon('😡')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">😡</button>
-                                <button onclick="selectIcon('💊')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">💊</button>
-                                <button onclick="selectIcon('💤')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">💤</button>
-                                <button onclick="selectIcon('❓')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition btn-press-effect">❓</button>
+                                <button onclick="selectIcon('✨')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">✨</button>
+                                <button onclick="selectIcon('⭐')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">⭐</button>
+                                <button onclick="selectIcon('❤️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">❤️</button>
+                                <button onclick="selectIcon('👍')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">👍</button>
+                                <button onclick="selectIcon('😀')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">😀</button>
+                                <button onclick="selectIcon('😢')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">😢</button>
+                                <button onclick="selectIcon('😡')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">😡</button>
+                                <button onclick="selectIcon('💊')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">💊</button>
+                                <button onclick="selectIcon('💤')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">💤</button>
+                                <button onclick="selectIcon('❓')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">❓</button>
                             </div>
                         </div>
                     </div>
@@ -304,843 +277,792 @@
     </main>
 
     <script>
-        // IIFE를 사용하여 전역 스코프 오염 방지 및 코드 캡슐화
-        (function() {
-            // --- Core State Structure ---
-            let state = {
-                currentStudentId: null, 
-                studentName: '',
-                behaviors: [],
-                startTime: null, 
-                endTime: null,
-                timerInterval: null, 
-                logs: [], 
-                counts: {}, 
-                isTracking: false 
-            };
-            let currentReportStudentId = null; // 현재 리포트 뷰에 표시 중인 학생 ID
-            
-            let allStudents = {}; // 모든 학생 데이터 (localStorage와 동기화)
-            let globalTimerInterval = null; 
+        // --- Core State Structure ---
+        let state = {
+            currentStudentId: null, 
+            studentName: '',
+            behaviors: [],
+            startTime: null, 
+            endTime: null,
+            timerInterval: null, 
+            logs: [], 
+            counts: {}, 
+            isTracking: false 
+        };
+        // 현재 리포트 뷰에 표시 중인 학생 ID를 저장합니다.
+        let currentReportStudentId = null; 
+        
+        let allStudents = {}; 
+        let globalTimerInterval = null; 
 
-            const colors = [
-                { id: 'b1', bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100', hover: 'hover:border-indigo-300' },
-                { id: 'b2', bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-100', hover: 'hover:border-pink-300' },
-                { id: 'b3', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100', hover: 'hover:border-amber-300' }
-            ];
+        const colors = [
+            { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100', sticker: '⭐', hover: 'hover:border-indigo-300' },
+            { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-100', sticker: '🌸', hover: 'hover:border-pink-300' },
+            { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100', sticker: '🐣', hover: 'hover:border-amber-300' }
+        ];
 
-            // --- Persistence Keys & DOM Elements (Refactored) ---
-            const STORAGE_KEY_STUDENTS = 'behaviorApp_all_students_v8'; 
+        // --- Persistence Keys & DOM Elements ---
+        const STORAGE_KEY_STUDENTS = 'behaviorApp_all_students_v8'; 
+        const DEFAULT_STUDENT_ID = 'new-default-student';
 
-            const els = {
-                views: {
-                    home: document.getElementById('view-home'),
-                    setup: document.getElementById('view-setup'),
-                    tracking: document.getElementById('view-tracking'),
-                    report: document.getElementById('view-report')
-                },
-                timerDisplay: document.getElementById('timer-display'),
-                logList: document.getElementById('log-list'),
-                saveStatus: document.getElementById('save-status'),
-                iconPickerModal: document.getElementById('icon-picker-modal'),
-                setupStudentName: document.getElementById('setup-student-name'),
-                studentListContainer: document.getElementById('student-list-container'),
-                trackingStudentCount: document.getElementById('tracking-student-count'),
-                startAllTrackingBtn: document.getElementById('start-all-tracking-btn'),
-                reportStudentName: document.getElementById('report-student-name'),
-                reportDate: document.getElementById('report-date'),
-                reportDuration: document.getElementById('report-duration'),
-                reportTableBody: document.getElementById('report-table-body'),
-                buttonsContainer: document.getElementById('buttons-container')
-            };
+        const els = {
+            views: {
+                home: document.getElementById('view-home'),
+                setup: document.getElementById('view-setup'),
+                tracking: document.getElementById('view-tracking'),
+                report: document.getElementById('view-report')
+            },
+            timerDisplay: document.getElementById('timer-display'),
+            logList: document.getElementById('log-list'),
+            saveStatus: document.getElementById('save-status'),
+            iconPickerModal: document.getElementById('icon-picker-modal'),
+            setupStudentName: document.getElementById('setup-student-name'),
+            studentListContainer: document.getElementById('student-list-container'),
+            trackingStudentCount: document.getElementById('tracking-student-count'),
+            startAllTrackingBtn: document.getElementById('start-all-tracking-btn'),
+            reportStudentName: document.getElementById('report-student-name'),
+            reportCompleteBtn: document.getElementById('report-complete-btn')
+        };
 
-            let currentPickingId = null; 
+        let currentPickingId = null; 
 
-            // ===============================================
-            // I. Persistence & Core Student Management
-            // ===============================================
+        // --- Persistence & Core Student Management ---
 
-            function loadAllStudents() {
-                const saved = localStorage.getItem(STORAGE_KEY_STUDENTS);
+        function loadAllStudents() {
+            const saved = localStorage.getItem(STORAGE_KEY_STUDENTS);
+            if (saved) {
                 try {
-                    allStudents = saved ? JSON.parse(saved) : {};
+                    allStudents = JSON.parse(saved);
                 } catch(e) {
                     console.error("학생 데이터 로드 실패:", e);
                     allStudents = {};
                 }
+            } else {
+                allStudents = {};
             }
+        }
 
-            function saveAllStudents() {
-                localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(allStudents));
-            }
-            
-            // 전역 초기화
-            window.clearAllDataPrompt = function() {
-                if(confirm('경고: 모든 학생 데이터와 설정을 영구적으로 삭제하시겠습니까?')) {
-                    localStorage.removeItem(STORAGE_KEY_STUDENTS);
-                    location.reload();
-                }
-            }
+        function saveAllStudents() {
+            localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(allStudents));
+        }
 
-            function saveStudentData(id, name, config, session, latestReport = null) { 
-                allStudents[id] = {
-                    id,
-                    name,
-                    config,
-                    session: session || allStudents[id]?.session || { isTracking: false, logs: [], counts: {} },
-                    latestReport: latestReport || allStudents[id]?.latestReport || null 
-                };
+        function clearAllDataPrompt() {
+            if(confirm('경고: 모든 학생 데이터와 설정을 영구적으로 삭제하시겠습니까?')) {
+                localStorage.removeItem(STORAGE_KEY_STUDENTS);
+                location.reload();
+            }
+        }
+
+        function saveStudentData(id, name, config, session, latestReport = null) { 
+            allStudents[id] = {
+                id,
+                name,
+                config,
+                session: session || allStudents[id]?.session || { isTracking: false },
+                latestReport: latestReport || allStudents[id]?.latestReport || null 
+            };
+            saveAllStudents();
+        }
+        
+        function deleteStudent(id) {
+            if (confirm(`${allStudents[id].name} 학생의 모든 데이터를 삭제하시겠습니까?`)) {
+                delete allStudents[id];
                 saveAllStudents();
-            }
-
-            // 학생 데이터 삭제
-            window.deleteStudent = function(id) {
-                if (confirm(`${allStudents[id].name} 학생의 모든 데이터를 삭제하시겠습니까?`)) {
-                    delete allStudents[id];
-                    saveAllStudents();
-                    // 현재 관찰 중인 학생이 남아있다면 UI 업데이트
-                    if (getActiveStudentIds().length > 0 && els.views.tracking.classList.contains('flex')) {
-                        renderActiveTracking();
-                        updateLogDisplay();
-                    }
-                    renderHomeView();
-                }
-            }
-
-            // 설정 화면에서 변경된 내용 저장
-            window.saveConfig = function() {
-                const studentId = state.currentStudentId || 'student-' + Date.now();
-                const studentName = document.getElementById('student-name').value || '학생명';
-
-                const config = {
-                    b1: document.getElementById('behavior-1').value.trim(),
-                    icon1: document.getElementById('icon-val-1').value,
-                    b2: document.getElementById('behavior-2').value.trim(),
-                    icon2: document.getElementById('icon-val-2').value,
-                    b3: document.getElementById('behavior-3').value.trim(),
-                    icon3: document.getElementById('icon-val-3').value,
-                };
-                
-                const sessionData = allStudents[studentId]?.session || { isTracking: false, logs: [], counts: {} };
-
-                saveStudentData(studentId, studentName, config, sessionData);
-
-                state.currentStudentId = studentId;
-                state.studentName = studentName;
-                els.setupStudentName.textContent = studentName;
-            }
-
-            function loadConfig(id, data = null) {
-                const studentData = data || allStudents[id] || {};
-                const config = studentData.config || {};
-                
-                document.getElementById('student-name').value = studentData.name || '';
-                
-                const defaultIcons = ['👀', '👂', '✨'];
-                
-                for(let i=1; i<=3; i++) {
-                    const iconVal = config[`icon${i}`] || defaultIcons[i-1];
-                    document.getElementById(`behavior-${i}`).value = config[`b${i}`] || '';
-                    document.getElementById(`icon-val-${i}`).value = iconVal; 
-                    document.getElementById(`icon-btn-${i}`).textContent = iconVal;
-                }
-
-                state.currentStudentId = id;
-                state.studentName = studentData.name || '학생명';
-                els.setupStudentName.textContent = state.studentName;
-            }
-            
-            // 행동 입력 필드 초기화
-            window.removeBehaviorInput = function(id) {
-                const filledBehaviors = [1, 2, 3].filter(i => document.getElementById(`behavior-${i}`).value.trim() !== '');
-                
-                if (filledBehaviors.length === 1 && filledBehaviors[0] === id) {
-                    alert('최소 1개의 관찰 목표 행동이 필요합니다.');
-                    return;
-                }
-
-                // 입력 필드 초기화 및 아이콘 재설정
-                const defaultIcons = ['👀', '👂', '✨'];
-                document.getElementById(`behavior-${id}`).value = '';
-                document.getElementById(`icon-val-${id}`).value = defaultIcons[id-1]; 
-                document.getElementById(`icon-btn-${id}`).textContent = defaultIcons[id-1];
-                
-                saveConfig(); 
-            }
-
-
-            // ===============================================
-            // II. View Navigation & Home View Logic
-            // ===============================================
-
-            window.switchView = function(viewName) {
-                Object.values(els.views).forEach(el => {
-                    el.classList.add('hidden');
-                    el.classList.remove('flex');
-                });
-                const target = els.views[viewName];
-                target.classList.remove('hidden');
-                target.classList.add('flex');
-                
-                if (viewName === 'home') {
-                    renderHomeView();
-                    if (globalTimerInterval) clearInterval(globalTimerInterval);
-                } else if (viewName === 'tracking') {
+                if (getActiveStudentIds().length > 0) {
                     renderActiveTracking();
                     updateLogDisplay();
-                    startGlobalTimer();
-                } else {
-                    if (globalTimerInterval) clearInterval(globalTimerInterval);
                 }
+                renderHomeView();
             }
+        }
 
-            function renderHomeView() {
-                els.studentListContainer.innerHTML = '';
-                const studentIds = Object.keys(allStudents);
-                const activeIds = getActiveStudentIds(); 
+        function saveConfig() {
+            const studentId = state.currentStudentId || 'student-' + Date.now();
+            const studentName = document.getElementById('student-name').value || '학생명';
 
-                if (studentIds.length === 0) {
-                    els.studentListContainer.innerHTML = '<p class="text-center text-gray-400 py-10">등록된 학생이 없습니다. 아래 버튼을 눌러 시작하세요.</p>';
-                    els.startAllTrackingBtn.classList.add('hidden');
-                    return;
-                }
-                
-                if (studentIds.length > 0 && activeIds.length === 0) {
-                    // 관찰 중인 학생이 없으면서 등록된 학생이 있을 경우 일괄 시작 버튼 표시
-                    els.startAllTrackingBtn.classList.remove('hidden');
-                } else {
-                    els.startAllTrackingBtn.classList.add('hidden');
-                }
-
-
-                studentIds.forEach(id => {
-                    const data = allStudents[id];
-                    const isTracking = data.session?.isTracking;
-                    const hasReport = !!data.latestReport; 
-
-                    const card = document.createElement('div');
-                    card.className = `
-                        flex items-center justify-between p-4 rounded-xl border-2 shadow-sm transition-all
-                        ${isTracking ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-100' : 
-                          (hasReport ? 'bg-pink-50 border-pink-400 ring-2 ring-pink-100' : 'bg-white border-gray-100 hover:border-indigo-300')}
-                    `;
-
-                    let statusText = isTracking ? 
-                        `<span class="text-emerald-600 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 관찰 중</span>` : 
-                        (hasReport ? `<span class="text-pink-600 font-bold">📄 리포트 대기 중</span>` : `<span class="text-gray-400">설정 완료</span>`);
-
-                    let actionButton = '';
-                    if (isTracking) {
-                        actionButton = `<button onclick="handleStudentAction('${id}', ${isTracking})" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 transition shadow-md btn-press-effect">관찰 재개/보기</button>`;
-                    } else if (hasReport) {
-                        actionButton = `<button onclick="showReportFromHome('${id}')" class="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-bold hover:bg-pink-600 transition shadow-md btn-press-effect">리포트 보기</button>`;
-                    } else {
-                         actionButton = `<button onclick="handleStudentAction('${id}', ${isTracking})" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 transition shadow-md btn-press-effect">설정/시작</button>`;
-                    }
-
-
-                    card.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">🧑‍🎓</span>
-                            <div>
-                                <span class="text-lg font-bold text-gray-800">${data.name || '학생명'}</span>
-                                <div class="text-xs text-gray-500">${statusText}</div>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            ${actionButton}
-                            <button onclick="deleteStudent('${id}')" 
-                                    class="w-8 h-8 flex-shrink-0 rounded-full bg-gray-100 hover:bg-red-50 text-red-400 transition text-sm btn-press-effect">
-                                🗑️
-                            </button>
-                        </div>
-                    `;
-                    els.studentListContainer.appendChild(card);
-                });
-            }
-
-            window.showReportFromHome = function(studentId) {
-                const studentData = allStudents[studentId];
-                if (studentData.latestReport) {
-                    currentReportStudentId = studentId; 
-                    renderReport(studentId, studentData.latestReport); 
-                    switchView('report');
-                } else {
-                    alert('저장된 리포트 데이터가 없습니다.');
-                }
-            }
+            const config = {
+                b1: document.getElementById('behavior-1').value,
+                icon1: document.getElementById('icon-val-1').value,
+                b2: document.getElementById('behavior-2').value,
+                icon2: document.getElementById('icon-val-2').value,
+                b3: document.getElementById('behavior-3').value,
+                icon3: document.getElementById('icon-val-3').value,
+            };
             
-            window.clearLatestReportAndGoHome = function() {
-                if (!currentReportStudentId) {
-                    switchView('home');
-                    return;
-                }
+            const sessionData = allStudents[studentId]?.session || { isTracking: false };
 
-                const studentId = currentReportStudentId;
-                const studentData = allStudents[studentId];
+            saveStudentData(studentId, studentName, config, sessionData);
 
-                if (confirm(`${studentData.name} 학생의 리포트 확인을 완료하고 목록에서 숨기시겠습니까?`)) {
-                    studentData.latestReport = null;
-                    saveAllStudents();
-                    currentReportStudentId = null;
-                    switchView('home');
-                }
-            }
+            state.currentStudentId = studentId;
+            state.studentName = studentName;
+            els.setupStudentName.textContent = studentName;
+        }
+
+        function loadConfig(id, data = null) {
+            const studentData = data || allStudents[id] || {};
+            const config = studentData.config || {};
             
-            // 모든 학생 일괄 관찰 시작
-            window.startAllStudentTracking = function() {
-                const studentIds = Object.keys(allStudents);
-                let hasValidBehavior = false;
-
-                studentIds.forEach(id => {
-                    const studentData = allStudents[id];
-                    if (!studentData.session.isTracking) {
-                        
-                        const behaviors = buildBehaviorList(studentData.config);
-
-                        if (behaviors.length > 0) {
-                            const counts = {};
-                            behaviors.forEach(b => counts[b.id] = 0);
-                            
-                            studentData.session = {
-                                isTracking: true,
-                                startTime: Date.now(),
-                                logs: [],
-                                counts,
-                                behaviors 
-                            };
-                            hasValidBehavior = true;
-                        }
-                    }
-                });
-
-                if (hasValidBehavior) {
-                    saveAllStudents();
-                    switchView('tracking');
-                } else {
-                    alert('관찰을 시작할 유효한 행동 설정이 있는 학생이 없습니다. 학생 설정 화면에서 최소 1개의 행동을 등록해주세요.');
-                }
-            }
+            // Set Inputs
+            document.getElementById('student-name').value = studentData.name || '';
             
-            // 홈 화면에서 학생 카드를 눌렀을 때 액션
-            window.handleStudentAction = function(id, isTracking) {
-                const data = allStudents[id];
-                
-                if (isTracking) {
-                    switchView('tracking'); // 관찰 중이면 바로 트래킹 뷰로 이동
-                } else {
-                    editStudentConfig(id, data); // 관찰 중이 아니면 설정 뷰로 이동
-                }
+            // Handle behavior inputs dynamically to respect deletion
+            for(let i=1; i<=3; i++) {
+                document.getElementById(`behavior-${i}`).value = config[`b${i}`] || '';
+                // 기본값 설정 (아이콘 값이 없을 경우)
+                document.getElementById(`icon-val-${i}`).value = config[`icon${i}`] || (i === 1 ? '👀' : (i === 2 ? '👂' : '✨')); 
+                document.getElementById(`icon-btn-${i}`).textContent = document.getElementById(`icon-val-${i}`).value;
             }
 
-            // 설정 화면 진입
-            window.editStudentConfig = function(id = null, data = null) {
-                const newId = id || 'student-' + Date.now();
-                loadConfig(newId, data);
-                switchView('setup');
-            }
-
-
-            // ===============================================
-            // III. Tracking & Timer Logic
-            // ===============================================
+            // Set global state for the current context
+            state.currentStudentId = id;
+            state.studentName = studentData.name || '학생명';
+            els.setupStudentName.textContent = state.studentName;
+        }
+        
+        function removeBehaviorInput(id) {
+            // Check how many non-empty behavior inputs exist
+            const behaviorCount = [1, 2, 3].filter(i => document.getElementById(`behavior-${i}`).value.trim() !== '').length;
             
-            function getActiveStudentIds() {
-                return Object.keys(allStudents).filter(id => allStudents[id].session?.isTracking);
+            // If only one is left, and the user is trying to clear that one, prevent it.
+            if (behaviorCount <= 1 && document.getElementById(`behavior-${id}`).value.trim() !== '') {
+                alert('최소 1개의 관찰 목표 행동이 필요합니다.');
+                return;
             }
 
-            function startGlobalTimer() {
+            // Clear the specific inputs and reset icon/value
+            document.getElementById(`behavior-${id}`).value = '';
+            // 아이콘 값도 기본값(임시값)이나 빈 값으로 설정
+            document.getElementById(`icon-val-${id}`).value = (id === 1 ? '👀' : (id === 2 ? '👂' : '✨')); 
+            document.getElementById(`icon-btn-${id}`).textContent = document.getElementById(`icon-val-${id}`).value;
+            
+            saveConfig(); // 변경된 설정 저장 (빈 행동은 저장되지 않음)
+        }
+
+
+        // --- View Navigation & Home View ---
+
+        function switchView(viewName) {
+            Object.values(els.views).forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            });
+            const target = els.views[viewName];
+            target.classList.remove('hidden');
+            target.classList.add('flex');
+            
+            if (viewName === 'home') {
+                renderHomeView();
                 if (globalTimerInterval) clearInterval(globalTimerInterval);
-                updateGlobalTimerDisplay();
-                globalTimerInterval = setInterval(updateGlobalTimerDisplay, 1000);
-            }
-
-            function updateGlobalTimerDisplay() {
-                const activeIds = getActiveStudentIds();
-                els.trackingStudentCount.textContent = `${activeIds.length}명`;
-
-                if (activeIds.length === 0) {
-                    if (globalTimerInterval) clearInterval(globalTimerInterval);
-                    els.timerDisplay.textContent = '00:00';
-                    return;
-                }
-                
-                let earliestStart = Infinity;
-                activeIds.forEach(id => {
-                    if (allStudents[id].session.startTime < earliestStart) {
-                        earliestStart = allStudents[id].session.startTime;
-                    }
-                });
-
-                const now = Date.now();
-                const diff = Math.floor((now - earliestStart) / 1000);
-                if (diff < 0 || earliestStart === Infinity) { els.timerDisplay.textContent = "00:00"; return; }
-                const mm = String(Math.floor(diff / 60)).padStart(2, '0');
-                const ss = String(diff % 60).padStart(2, '0');
-                els.timerDisplay.textContent = `${mm}:${ss}`;
-            }
-
-            function buildBehaviorList(config) {
-                 const behaviors = [];
-                for (let i = 1; i <= 3; i++) {
-                    const bName = config[`b${i}`];
-                    if (bName && bName.trim() !== '') {
-                        behaviors.push({
-                            id: `b${i}`,
-                            name: bName,
-                            icon: config[`icon${i}`],
-                            color: colors[i - 1]
-                        });
-                    }
-                }
-                return behaviors;
-            }
-
-            // 관찰 시작 (설정 화면에서)
-            window.startSession = function() {
-                saveConfig(); // 현재 설정 저장
-                
-                const studentId = state.currentStudentId;
-                const studentData = allStudents[studentId];
-                
-                const behaviors = buildBehaviorList(studentData.config);
-
-                if (behaviors.length === 0) {
-                    alert('최소 1개의 행동을 입력해주세요.');
-                    return;
-                }
-                
-                const counts = {};
-                behaviors.forEach(b => counts[b.id] = 0);
-                
-                studentData.session = {
-                    isTracking: true,
-                    startTime: Date.now(),
-                    logs: [],
-                    counts,
-                    behaviors 
-                };
-
-                saveAllStudents();
-                switchView('tracking');
-            }
-
-            // 행동 기록 (스티커 카운터 클릭)
-            window.recordBehavior = function(studentId, behavior) {
-                const student = allStudents[studentId];
-                const session = student.session;
-                
-                session.counts[behavior.id] = (session.counts[behavior.id] || 0) + 1;
-                const count = session.counts[behavior.id];
-                
-                const numEl = document.getElementById(`num-count-${studentId}-${behavior.id}`);
-                const board = document.getElementById(`sticker-board-${studentId}-${behavior.id}`);
-                
-                if(numEl) numEl.textContent = count;
-
-                if(board) {
-                    if(count === 1) board.innerHTML = ''; 
-                    
-                    const maxVisuals = 15;
-                    if (count <= maxVisuals) {
-                        // 스티커 애니메이션을 위해 새로운 엘리먼트 생성 및 추가
-                        const span = document.createElement('span');
-                        span.className = `token-animate text-xl leading-none ${(count > 1 && (count-1) % 5 === 0) ? 'ml-1' : ''}`;
-                        span.textContent = '⭐';
-                        board.appendChild(span);
-                    } else if (count === maxVisuals + 1) {
-                        // 15개를 넘으면 '15+' 표시로 전환
-                        board.innerHTML = ''; 
-                        for(let i=0; i<maxVisuals; i++) {
-                            const extraMargin = (i > 0 && i % 5 === 0) ? 'ml-1' : '';
-                            board.innerHTML += `<span class="text-xl leading-none ${extraMargin}">⭐</span>`;
-                        }
-                        board.innerHTML += `<span id="plus-count-${studentId}-${behavior.id}" class="text-sm font-bold bg-white/50 px-1 rounded ml-1">+${count - maxVisuals}</span>`;
-                    } else if (count > maxVisuals) {
-                         const plusEl = document.getElementById(`plus-count-${studentId}-${behavior.id}`);
-                         if(plusEl) plusEl.textContent = `+${count - maxVisuals}`;
-                    }
-                }
-
-                // 로그 기록
-                const now = Date.now();
-                const diff = Math.floor((now - session.startTime) / 1000);
-                const mm = String(Math.floor(diff / 60)).padStart(2, '0');
-                const ss = String(diff % 60).padStart(2, '0');
-
-                session.logs.push({
-                    studentId,
-                    studentName: student.name,
-                    behaviorId: behavior.id,
-                    behaviorName: behavior.name,
-                    behaviorIcon: behavior.icon,
-                    timestamp: now,
-                    timeString: `${mm}:${ss}`,
-                    colorClass: behavior.color.text
-                });
-
+            } else if (viewName === 'tracking') {
+                renderActiveTracking();
                 updateLogDisplay();
-                saveAllStudents();
-                
-                // 저장 상태 표시
-                els.saveStatus.classList.remove('hidden');
-                els.saveStatus.classList.add('flex');
-                setTimeout(() => {
-                    els.saveStatus.classList.add('hidden');
-                    els.saveStatus.classList.remove('flex');
-                }, 1500);
+                startGlobalTimer();
+            } else {
+                if (globalTimerInterval) clearInterval(globalTimerInterval);
             }
+        }
 
-            // 관찰 화면 렌더링
-            function renderActiveTracking() {
-                const activeIds = getActiveStudentIds();
-                const container = els.buttonsContainer;
-                container.innerHTML = '';
-                
-                if (activeIds.length === 0) {
-                    container.innerHTML = '<p class="text-center text-gray-400 py-20">관찰 중인 학생이 없습니다. 학생 관리 화면에서 관찰을 시작하세요.</p>';
-                    return;
-                }
+        function renderHomeView() {
+            els.studentListContainer.innerHTML = '';
+            const studentIds = Object.keys(allStudents);
+            const activeIds = getActiveStudentIds(); 
 
-                const numActive = activeIds.length;
-                let gridClass = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'; 
-                if (numActive > 4) {
-                    gridClass = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-                }
-                
-                container.className = `grid ${gridClass} gap-4 h-full md:h-auto content-start`;
-
-
-                activeIds.forEach(id => {
-                    const studentData = allStudents[id];
-                    
-                    const panel = document.createElement('div');
-                    panel.className = `
-                        bg-white rounded-3xl p-4 shadow-xl border-4 border-gray-100 
-                        flex flex-col min-h-[300px] overflow-hidden
-                    `;
-                    
-                    panel.innerHTML = `
-                        <div class="flex items-center justify-between mb-3 border-b pb-2 shrink-0">
-                            <span class="text-xl font-black text-gray-800 flex items-center gap-2">
-                                <span class="text-2xl">🧑‍🎓</span> ${studentData.name || '학생명'}
-                            </span>
-                            <button onclick="finalizeReportAndShowReport('${id}')" class="px-3 py-1 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition shadow-sm btn-press-effect">
-                                개별 종료
-                            </button>
-                        </div>
-                        <div id="student-buttons-${id}" class="flex-1 grid gap-2 overflow-y-auto custom-scroll">
-                        </div>
-                    `;
-                    container.appendChild(panel);
-                    
-                    const btnContainer = document.getElementById(`student-buttons-${id}`);
-                    renderBehaviorButtons(id, btnContainer);
-                });
-            }
-
-            function renderBehaviorButtons(studentId, container) {
-                const session = allStudents[studentId].session;
-                const behaviors = session.behaviors || [];
-                
-                const numBehaviors = behaviors.length;
-                let buttonGridClass = 'grid-cols-1';
-                if (numBehaviors === 2 || numBehaviors === 3) {
-                    buttonGridClass = 'grid-cols-2';
-                }
-
-                container.className = `grid ${buttonGridClass} gap-3 content-start pt-1`;
-                container.innerHTML = ''; 
-
-                behaviors.forEach(b => {
-                    const count = session.counts[b.id] || 0;
-                    const maxVisuals = 15; 
-                    const displayCount = Math.min(count, maxVisuals);
-                    
-                    let visualTokensHtml = '';
-                    for(let i=0; i<displayCount; i++) {
-                        const extraMargin = (i > 0 && i % 5 === 0) ? 'ml-1' : '';
-                        visualTokensHtml += `<span class="text-xl leading-none ${extraMargin}">⭐</span>`;
-                    }
-
-                    if (count > maxVisuals) {
-                        visualTokensHtml += `<span id="plus-count-${studentId}-${b.id}" class="text-sm font-bold bg-white/50 px-1 rounded ml-1">+${count - maxVisuals}</span>`;
-                    }
-
-                    const btn = document.createElement('div');
-                    // 애니메이션을 위해 token-animate 클래스는 recordBehavior에서 동적으로 추가
-                    btn.className = `
-                        relative w-full min-h-[150px] rounded-2xl border-2 transition-all duration-100 
-                        flex flex-col p-3 cursor-pointer select-none btn-press-effect active:scale-[0.98] shadow-md hover:shadow-lg
-                        ${b.color.bg} ${b.color.border} ${b.color.hover}
-                    `;
-                    
-                    btn.onclick = () => recordBehavior(studentId, b);
-
-                    btn.innerHTML = `
-                        <div class="flex justify-between items-start mb-2 pointer-events-none shrink-0">
-                            <div class="flex items-center gap-2">
-                                <span class="text-4xl filter drop-shadow-sm">${b.icon}</span>
-                                <span class="text-lg font-black ${b.color.text} leading-tight">${b.name}</span>
-                            </div>
-                            <div class="bg-white/80 backdrop-blur-sm px-3 py-1 rounded-xl shadow-sm border border-white/50">
-                                <span id="num-count-${studentId}-${b.id}" class="text-3xl font-black ${b.color.text} tabular-nums">${count}</span>
-                            </div>
-                        </div>
-                        
-                        <div id="sticker-board-${studentId}-${b.id}" class="flex-1 bg-white/40 rounded-xl p-2 flex flex-wrap content-start items-start gap-0.5 pointer-events-none shadow-inner min-h-[80px]">
-                            ${count === 0 ? '<span class="text-gray-400/50 text-xs font-bold w-full text-center mt-6">터치하여 스티커 붙이기</span>' : visualTokensHtml}
-                        </div>
-                        
-                        <div class="absolute inset-0 bg-white opacity-0 hover:opacity-10 active:opacity-20 transition-opacity rounded-2xl pointer-events-none"></div>
-                    `;
-                    container.appendChild(btn);
-                });
-            }
-
-            // 로그 목록 업데이트
-            function updateLogDisplay() {
-                els.logList.innerHTML = '';
-                
-                let allLogs = [];
-                getActiveStudentIds().forEach(id => {
-                    allLogs = allLogs.concat(allStudents[id].session.logs);
-                });
-                
-                allLogs.sort((a, b) => b.timestamp - a.timestamp);
-
-                allLogs.slice(0, 50).forEach(log => {
-                    const li = document.createElement('li');
-                    li.className = "flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm animate-fade-in";
-                    li.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl bg-gray-50 p-1.5 rounded-lg border border-gray-100">${log.behaviorIcon}</span>
-                            <div class="flex flex-col">
-                                <span class="font-bold text-gray-700 text-sm">${log.behaviorName}</span>
-                                <span class="text-xs text-gray-400 font-medium">${log.studentName}</span> 
-                            </div>
-                        </div>
-                        <span class="text-xs font-mono font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded border border-gray-100">${log.timeString}</span>
-                    `;
-                    els.logList.appendChild(li);
-                });
-                
-                if (allLogs.length === 0) {
-                    els.logList.innerHTML = '<li class="text-center text-gray-400 py-10 text-sm font-medium">기록 없음</li>';
-                }
-            }
-
-            // 마지막 기록 취소
-            window.undoLastLog = function() {
-                let allLogs = [];
-                getActiveStudentIds().forEach(id => {
-                    allLogs = allLogs.concat(allStudents[id].session.logs);
-                });
-                
-                if (allLogs.length === 0) return;
-                
-                allLogs.sort((a, b) => b.timestamp - a.timestamp);
-                const lastLog = allLogs[0];
-                
-                const session = allStudents[lastLog.studentId].session;
-
-                // 로그 배열에서 삭제
-                const logIndex = session.logs.findIndex(log => log.timestamp === lastLog.timestamp);
-                if (logIndex !== -1) {
-                    session.logs.splice(logIndex, 1);
-                }
-                
-                // 카운트 감소
-                if (session.counts[lastLog.behaviorId] > 0) {
-                    session.counts[lastLog.behaviorId]--;
-                }
-                
-                // 해당 학생의 버튼 UI만 재렌더링
-                const affectedContainer = document.getElementById(`student-buttons-${lastLog.studentId}`);
-                if (affectedContainer) {
-                    renderBehaviorButtons(lastLog.studentId, affectedContainer);
-                }
-
-                updateLogDisplay();
-                saveAllStudents();
+            if (studentIds.length === 0) {
+                els.studentListContainer.innerHTML = '<p class="text-center text-gray-400 py-10">등록된 학생이 없습니다. 아래 버튼을 눌러 시작하세요.</p>';
+                els.startAllTrackingBtn.classList.add('hidden');
+                return;
             }
             
-            // 개별 학생 관찰 종료 및 리포트 데이터 생성
-            function finalizeReport(studentId) {
-                const studentData = allStudents[studentId];
-                const session = studentData.session;
-                session.endTime = Date.now();
-                session.isTracking = false;
-
-                const reportData = {
-                    startTime: session.startTime,
-                    endTime: session.endTime,
-                    behaviors: session.behaviors,
-                    counts: session.counts
-                };
-
-                saveStudentData(studentId, studentData.name, studentData.config, session, reportData);
+            if (studentIds.length > 0 && activeIds.length === 0) {
+                els.startAllTrackingBtn.classList.remove('hidden');
+            } else {
+                els.startAllTrackingBtn.classList.add('hidden');
             }
-            
-            // 개별 종료 후 리포트 보기
-            window.finalizeReportAndShowReport = function(studentId) {
-                if (!confirm(`${allStudents[studentId].name || '이 학생'}의 관찰을 종료하고 결과를 보시겠습니까?`)) return;
 
-                finalizeReport(studentId); 
-                
-                currentReportStudentId = studentId; 
-                
-                renderReport(studentId, allStudents[studentId].latestReport);
-                
-                // Tracking 뷰 업데이트 (종료된 학생 제거)
-                if (getActiveStudentIds().length > 0) {
-                    renderActiveTracking(); 
-                    updateLogDisplay();
-                } 
+
+            studentIds.forEach(id => {
+                const data = allStudents[id];
+                const isTracking = data.session?.isTracking;
+                const hasReport = !!data.latestReport; // 저장된 리포트 데이터가 있는지 확인
+
+                const card = document.createElement('div');
+                card.className = `
+                    flex items-center justify-between p-4 rounded-xl border-2 shadow-sm transition-all
+                    ${isTracking ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-100' : 
+                      (hasReport ? 'bg-pink-50 border-pink-400 ring-2 ring-pink-100' : 'bg-white border-gray-100 hover:border-indigo-300')}
+                `;
+
+                let statusText = isTracking ? 
+                    `<span class="text-emerald-600 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 관찰 중</span>` : 
+                    (hasReport ? `<span class="text-pink-600 font-bold">📄 리포트 대기 중</span>` : `<span class="text-gray-400">설정 완료</span>`);
+
+                let actionButton = '';
+                if (isTracking) {
+                    actionButton = `<button onclick="handleStudentAction('${id}', ${isTracking})" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 transition shadow-md">관찰 재개/보기</button>`;
+                } else if (hasReport) {
+                    // 리포트가 있으면 "리포트 보기" 버튼 활성화
+                    actionButton = `<button onclick="showReportFromHome('${id}')" class="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-bold hover:bg-pink-600 transition shadow-md">리포트 보기</button>`;
+                } else {
+                     actionButton = `<button onclick="handleStudentAction('${id}', ${isTracking})" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 transition shadow-md">설정/시작</button>`;
+                }
+
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🧑‍🎓</span>
+                        <div>
+                            <span class="text-lg font-bold text-gray-800">${data.name}</span>
+                            <div class="text-xs text-gray-500">${statusText}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${actionButton}
+                        <button onclick="deleteStudent('${id}')" 
+                                class="w-8 h-8 rounded-full bg-gray-100 hover:bg-red-50 text-red-400 transition text-sm">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+                els.studentListContainer.appendChild(card);
+            });
+        }
+
+        // 홈 화면에서 리포트 보기 버튼 클릭 시 실행
+        function showReportFromHome(studentId) {
+            const studentData = allStudents[studentId];
+            if (studentData.latestReport) {
+                currentReportStudentId = studentId; // 현재 보고 있는 리포트 학생 ID 저장
+                renderReport(studentId, studentData.latestReport); 
                 switchView('report');
+            } else {
+                alert('저장된 리포트 데이터가 없습니다.');
+            }
+        }
+        
+        // [New] 리포트 확인 완료 후, 리포트 데이터만 삭제하고 홈 화면으로 돌아가는 함수
+        function clearLatestReportAndGoHome() {
+            if (!currentReportStudentId) {
+                switchView('home');
+                return;
             }
 
-            // 전체 종료 후 홈으로 돌아가기
-            window.stopAllTrackingAndGoHome = function() {
-                if (!confirm('현재 관찰 중인 모든 학생의 세션을 종료하고 학생 관리 화면으로 돌아가시겠습니까?')) return;
+            const studentId = currentReportStudentId;
+            const studentData = allStudents[studentId];
 
-                const activeIds = getActiveStudentIds();
-                
-                activeIds.forEach(id => {
-                     finalizeReport(id); // 모든 학생 리포트 데이터를 latestReport에 저장
-                });
-                
+            if (confirm(`${studentData.name} 학생의 리포트 확인을 완료하고 목록에서 숨기시겠습니까?`)) {
+                // latestReport만 null로 설정
+                studentData.latestReport = null;
+                saveAllStudents();
+                currentReportStudentId = null;
                 switchView('home');
             }
+        }
+        
+        function startAllStudentTracking() {
+            const studentIds = Object.keys(allStudents);
+            let hasValidBehavior = false;
 
-
-            // ===============================================
-            // IV. Report Logic
-            // ===============================================
-
-            let resultChartInstance = null; // 차트 인스턴스 저장
-
-            function renderReport(studentId, reportData) {
-                const studentData = allStudents[studentId];
-                
-                els.reportStudentName.textContent = studentData.name || '학생명'; 
-                els.reportDate.textContent = new Date(reportData.endTime).toLocaleDateString();
-                
-                const diff = Math.floor((reportData.endTime - reportData.startTime) / 1000);
-                const mm = String(Math.floor(diff / 60)).padStart(2, '0');
-                const ss = String(diff % 60).padStart(2, '0');
-                els.reportDuration.textContent = `${mm}:${ss}`;
-                
-                els.reportTableBody.innerHTML = '';
-                
-                const totalCounts = Object.values(reportData.counts).reduce((a, b) => a + b, 0);
-
-                reportData.behaviors.forEach(b => {
-                    const count = reportData.counts[b.id] || 0;
-                    const percentage = totalCounts > 0 ? Math.round((count / totalCounts) * 100) : 0;
+            // 모든 학생에 대해 startSession 실행
+            studentIds.forEach(id => {
+                const studentData = allStudents[id];
+                if (!studentData.session.isTracking) {
                     
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-gray-50';
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 font-bold text-gray-700 flex items-center gap-3">
-                            <span class="text-2xl">${b.icon}</span> ${b.name}
-                        </td>
-                        <td class="px-6 py-4 text-right font-black text-emerald-600 text-xl tabular-nums">
-                            ${count} <span class="text-xs font-normal text-gray-400 ml-0.5">회</span>
-                        </td>
-                        <td class="px-6 py-4 text-right font-medium text-gray-500 tabular-nums">${percentage}%</td>
-                    `;
-                    els.reportTableBody.appendChild(tr);
-                });
-
-                // Chart.js 렌더링
-                const chartContainer = document.querySelector('#view-report .bg-gray-50.rounded-2xl.p-4');
-                chartContainer.innerHTML = '<canvas id="resultChart"></canvas>';
-                const ctx = document.getElementById('resultChart').getContext('2d');
-                
-                // 기존 차트 인스턴스가 있다면 파괴
-                if (resultChartInstance) {
-                    resultChartInstance.destroy();
-                }
-                
-                resultChartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: reportData.behaviors.map(b => b.name),
-                        datasets: [{
-                            label: '획득한 스티커 (빈도)',
-                            data: reportData.behaviors.map(b => reportData.counts[b.id] || 0),
-                            backgroundColor: ['rgba(79, 70, 229, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(245, 158, 11, 0.7)'],
-                            borderRadius: 8,
-                            barThickness: 40
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { display: false },
-                            tooltip: { callbacks: { label: (context) => context.dataset.label + ': ' + context.parsed.y + '회' } }
-                        },
-                        scales: { 
-                            y: { 
-                                beginAtZero: true, 
-                                ticks: { 
-                                    stepSize: 1,
-                                    callback: (value) => Number.isInteger(value) ? value : '' // 정수만 표시
-                                } 
-                            } 
+                    const behaviors = [];
+                    for (let i = 1; i <= 3; i++) {
+                        const bName = studentData.config[`b${i}`];
+                        if (bName && bName.trim() !== '') {
+                             behaviors.push({
+                                id: `b${i}`,
+                                name: bName,
+                                icon: studentData.config[`icon${i}`],
+                                color: colors[i - 1]
+                            });
                         }
                     }
-                });
-            }
 
-
-            // ===============================================
-            // V. Icon Picker Logic
-            // ===============================================
-
-            window.openIconPicker = function(id) {
-                currentPickingId = id;
-                els.iconPickerModal.classList.remove('hidden');
-                els.iconPickerModal.classList.add('flex');
-            }
-
-            window.closeIconPicker = function() {
-                els.iconPickerModal.classList.add('hidden');
-                els.iconPickerModal.classList.remove('flex');
-                currentPickingId = null;
-            }
-
-            window.selectIcon = function(icon) {
-                if (currentPickingId) {
-                    document.getElementById(`icon-btn-${currentPickingId}`).textContent = icon;
-                    document.getElementById(`icon-val-${currentPickingId}`).value = icon;
-                    saveConfig();
-                }
-                closeIconPicker();
-            }
-
-            // ===============================================
-            // VI. Initialization
-            // ===============================================
-            
-            window.addEventListener('DOMContentLoaded', () => {
-                loadAllStudents();
-                // 관찰 중인 학생이 있으면 Tracking 뷰로 바로 이동, 아니면 Home 뷰로 이동
-                if (getActiveStudentIds().length > 0) {
-                     switchView('tracking');
-                } else {
-                    switchView('home'); 
+                    if (behaviors.length > 0) {
+                        const counts = {};
+                        behaviors.forEach(b => counts[b.id] = 0);
+                        
+                        studentData.session = {
+                            isTracking: true,
+                            startTime: Date.now(),
+                            logs: [],
+                            counts,
+                            behaviors 
+                        };
+                        hasValidBehavior = true;
+                    }
                 }
             });
 
-            // 전역 함수 노출 (HTML 인라인 이벤트 핸들러용)
-            // 이미 window에 할당되어 있어 이 코드는 생략 가능하지만, 명시적으로 표시합니다.
-            // window.clearAllDataPrompt = clearAllDataPrompt;
-            // window.deleteStudent = deleteStudent;
-            // ... (나머지 함수도 필요에 따라 노출)
-        })();
+            if (hasValidBehavior) {
+                saveAllStudents();
+                switchView('tracking');
+            } else {
+                alert('관찰을 시작할 유효한 행동 설정이 있는 학생이 없습니다. 학생 설정 화면에서 최소 1개의 행동을 등록해주세요.');
+            }
+        }
+        
+
+        function handleStudentAction(id, isTracking) {
+            const data = allStudents[id];
+            
+            if (isTracking) {
+                renderActiveTracking();
+                switchView('tracking');
+            } else {
+                editStudentConfig(id, data);
+            }
+        }
+
+        function editStudentConfig(id = null, data = null) {
+            const newId = id || 'student-' + Date.now();
+            loadConfig(newId, data);
+            switchView('setup');
+        }
+
+        // --- Global Tracking Management ---
+        function getActiveStudentIds() {
+            return Object.keys(allStudents).filter(id => allStudents[id].session?.isTracking);
+        }
+
+        function startGlobalTimer() {
+            if (globalTimerInterval) clearInterval(globalTimerInterval);
+            updateGlobalTimerDisplay();
+            globalTimerInterval = setInterval(updateGlobalTimerDisplay, 1000);
+        }
+
+        function updateGlobalTimerDisplay() {
+            const activeIds = getActiveStudentIds();
+            els.trackingStudentCount.textContent = `${activeIds.length}명`;
+
+            if (activeIds.length === 0) {
+                if (globalTimerInterval) clearInterval(globalTimerInterval);
+                els.timerDisplay.textContent = '00:00';
+                return;
+            }
+            
+            let earliestStart = Infinity;
+            activeIds.forEach(id => {
+                if (allStudents[id].session.startTime < earliestStart) {
+                    earliestStart = allStudents[id].session.startTime;
+                }
+            });
+
+            const now = Date.now();
+            const diff = Math.floor((now - earliestStart) / 1000);
+            if (diff < 0 || earliestStart === Infinity) { els.timerDisplay.textContent = "00:00"; return; }
+            const mm = String(Math.floor(diff / 60)).padStart(2, '0');
+            const ss = String(diff % 60).padStart(2, '0');
+            els.timerDisplay.textContent = `${mm}:${ss}`;
+        }
+
+        // --- Core Session Logic ---
+
+        function startSession() {
+            saveConfig();
+            
+            const studentId = state.currentStudentId;
+            const studentData = allStudents[studentId];
+            
+            const config = studentData.config;
+            const behaviors = [];
+            for (let i = 1; i <= 3; i++) {
+                const bName = config[`b${i}`];
+                if (bName && bName.trim() !== '') {
+                    behaviors.push({
+                        id: `b${i}`,
+                        name: bName,
+                        icon: config[`icon${i}`],
+                        color: colors[i - 1]
+                    });
+                }
+            }
+
+            if (behaviors.length === 0) {
+                alert('최소 1개의 행동을 입력해주세요.');
+                return;
+            }
+            
+            const counts = {};
+            behaviors.forEach(b => counts[b.id] = 0);
+            
+            studentData.session = {
+                isTracking: true,
+                startTime: Date.now(),
+                logs: [],
+                counts,
+                behaviors 
+            };
+
+            saveAllStudents();
+            switchView('tracking');
+        }
+
+        function recordBehavior(studentId, behavior) {
+            const student = allStudents[studentId];
+            const session = student.session;
+            session.counts[behavior.id] = (session.counts[behavior.id] || 0) + 1;
+            
+            const count = session.counts[behavior.id];
+            
+            const numEl = document.getElementById(`num-count-${studentId}-${behavior.id}`);
+            if(numEl) numEl.textContent = count;
+
+            const board = document.getElementById(`sticker-board-${studentId}-${behavior.id}`);
+            if(board) {
+                if(count === 1) board.innerHTML = ''; 
+                
+                const maxVisuals = 15;
+                if (count <= maxVisuals) {
+                    const span = document.createElement('span');
+                    span.className = `token-animate text-xl leading-none ${(count > 1 && (count-1) % 5 === 0) ? 'ml-1' : ''}`;
+                    span.textContent = '⭐';
+                    board.appendChild(span);
+                } else {
+                    const affectedContainer = document.getElementById(`student-buttons-${studentId}`);
+                    if(affectedContainer) renderBehaviorButtons(studentId, affectedContainer);
+                }
+            }
+
+            const now = Date.now();
+            const diff = Math.floor((now - session.startTime) / 1000);
+            const mm = String(Math.floor(diff / 60)).padStart(2, '0');
+            const ss = String(diff % 60).padStart(2, '0');
+
+            session.logs.push({
+                studentId,
+                studentName: student.name,
+                behaviorId: behavior.id,
+                behaviorName: behavior.name,
+                behaviorIcon: behavior.icon,
+                timestamp: now,
+                timeString: `${mm}:${ss}`,
+                colorClass: behavior.color.text
+            });
+
+            updateLogDisplay();
+            saveAllStudents();
+            
+            els.saveStatus.classList.remove('hidden');
+            els.saveStatus.classList.add('flex');
+            setTimeout(() => {
+                els.saveStatus.classList.add('hidden');
+                els.saveStatus.classList.remove('flex');
+            }, 1500);
+        }
+
+        function renderActiveTracking() {
+            const activeIds = getActiveStudentIds();
+            const container = document.getElementById('buttons-container');
+            container.innerHTML = '';
+            
+            if (activeIds.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 py-20">관찰 중인 학생이 없습니다. 학생 관리 화면에서 관찰을 시작하세요.</p>';
+                return;
+            }
+
+            const numActive = activeIds.length;
+            let gridClass = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'; 
+            if (numActive > 4) {
+                gridClass = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+            }
+            
+            container.className = `grid ${gridClass} gap-4 h-full md:h-auto content-start`;
+
+
+            activeIds.forEach(id => {
+                const studentData = allStudents[id];
+                
+                const panel = document.createElement('div');
+                panel.className = `
+                    bg-white rounded-3xl p-4 shadow-xl border-4 border-gray-100 
+                    flex flex-col min-h-[300px] overflow-hidden
+                `;
+                
+                panel.innerHTML = `
+                    <div class="flex items-center justify-between mb-3 border-b pb-2">
+                        <span class="text-xl font-black text-gray-800 flex items-center gap-2">
+                            <span class="text-2xl">🧑‍🎓</span> ${studentData.name}
+                        </span>
+                        <button onclick="finalizeReportAndShowReport('${id}')" class="px-3 py-1 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition shadow-sm">
+                            개별 종료
+                        </button>
+                    </div>
+                    <div id="student-buttons-${id}" class="flex-1 grid gap-2">
+                    </div>
+                `;
+                container.appendChild(panel);
+                
+                const btnContainer = document.getElementById(`student-buttons-${id}`);
+                renderBehaviorButtons(id, btnContainer);
+            });
+        }
+
+        function renderBehaviorButtons(studentId, container) {
+            const session = allStudents[studentId].session;
+            const behaviors = session.behaviors || [];
+            
+            const numBehaviors = behaviors.length;
+            let buttonGridClass = 'grid-cols-1';
+            if (numBehaviors === 2 || numBehaviors === 3) {
+                buttonGridClass = 'grid-cols-2';
+            }
+
+            container.className = `grid ${buttonGridClass} gap-3`;
+            container.innerHTML = ''; 
+
+            behaviors.forEach(b => {
+                const count = session.counts[b.id] || 0;
+                
+                let visualTokensHtml = '';
+                const maxVisuals = 15; 
+                const displayCount = Math.min(count, maxVisuals);
+                
+                for(let i=0; i<displayCount; i++) {
+                    const extraMargin = (i > 0 && i % 5 === 0) ? 'ml-1' : '';
+                    visualTokensHtml += `<span class="token-animate text-xl leading-none ${extraMargin}">⭐</span>`;
+                }
+
+                if (count > maxVisuals) {
+                    visualTokensHtml += `<span class="text-sm font-bold bg-white/50 px-1 rounded ml-1">+${count - maxVisuals}</span>`;
+                }
+
+                const btn = document.createElement('div');
+                btn.className = `
+                    relative w-full min-h-[150px] rounded-2xl border-2 transition-all duration-100 
+                    flex flex-col p-3 cursor-pointer select-none btn-press-effect active:scale-[0.98] shadow-md hover:shadow-lg
+                    ${b.color.bg} ${b.color.border} ${b.color.hover}
+                `;
+                
+                btn.onclick = () => recordBehavior(studentId, b);
+
+                btn.innerHTML = `
+                    <div class="flex justify-between items-start mb-2 pointer-events-none">
+                        <div class="flex items-center gap-2">
+                            <span class="text-4xl filter drop-shadow-sm">${b.icon}</span>
+                            <span class="text-lg font-black ${b.color.text} leading-tight">${b.name}</span>
+                        </div>
+                        <div class="bg-white/80 backdrop-blur-sm px-3 py-1 rounded-xl shadow-sm border border-white/50">
+                            <span id="num-count-${studentId}-${b.id}" class="text-3xl font-black ${b.color.text} tabular-nums">${count}</span>
+                        </div>
+                    </div>
+                    
+                    <div id="sticker-board-${studentId}-${b.id}" class="flex-1 bg-white/40 rounded-xl p-2 flex flex-wrap content-start items-start gap-0.5 pointer-events-none shadow-inner min-h-[80px]">
+                        ${count === 0 ? '<span class="text-gray-400/50 text-xs font-bold w-full text-center mt-6">터치하여 스티커 붙이기</span>' : visualTokensHtml}
+                    </div>
+                    
+                    <div class="absolute inset-0 bg-white opacity-0 hover:opacity-10 active:opacity-20 transition-opacity rounded-2xl pointer-events-none"></div>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateLogDisplay() {
+            els.logList.innerHTML = '';
+            
+            let allLogs = [];
+            getActiveStudentIds().forEach(id => {
+                allLogs = allLogs.concat(allStudents[id].session.logs);
+            });
+            
+            allLogs.sort((a, b) => b.timestamp - a.timestamp);
+
+            allLogs.slice(0, 50).forEach(log => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm animate-fade-in mb-2";
+                li.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl bg-gray-50 p-1.5 rounded-lg border border-gray-100">${log.behaviorIcon}</span>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-gray-700 text-sm">${log.behaviorName}</span>
+                            <span class="text-xs text-gray-400 font-medium">${log.studentName}</span> 
+                        </div>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded border border-gray-100">${log.timeString}</span>
+                `;
+                els.logList.appendChild(li);
+            });
+            
+            if (allLogs.length === 0) {
+                els.logList.innerHTML = '<li class="text-center text-gray-400 py-10 text-sm font-medium">기록 없음</li>';
+            }
+        }
+
+        function undoLastLog() {
+            let allLogs = [];
+            getActiveStudentIds().forEach(id => {
+                allLogs = allLogs.concat(allStudents[id].session.logs);
+            });
+            
+            if (allLogs.length === 0) return;
+            
+            allLogs.sort((a, b) => b.timestamp - a.timestamp);
+            const lastLog = allLogs[0];
+            
+            const session = allStudents[lastLog.studentId].session;
+
+            const logIndex = session.logs.findIndex(log => log.timestamp === lastLog.timestamp);
+            if (logIndex !== -1) {
+                session.logs.splice(logIndex, 1);
+            }
+            
+            if (session.counts[lastLog.behaviorId] > 0) {
+                session.counts[lastLog.behaviorId]--;
+            }
+            
+            const affectedContainer = document.getElementById(`student-buttons-${lastLog.studentId}`);
+            if (affectedContainer) {
+                renderBehaviorButtons(lastLog.studentId, affectedContainer);
+            }
+
+            updateLogDisplay();
+            saveAllStudents();
+        }
+
+        function finalizeReport(studentId) {
+            const studentData = allStudents[studentId];
+            const session = studentData.session;
+            session.endTime = Date.now();
+            session.isTracking = false;
+
+            // 세션 종료 시 리포트 데이터를 생성하여 latestReport 필드에 저장
+            const reportData = {
+                startTime: session.startTime,
+                endTime: session.endTime,
+                behaviors: session.behaviors,
+                counts: session.counts
+            };
+
+            saveStudentData(studentId, studentData.name, studentData.config, session, reportData);
+        }
+        
+        // [수정] 개별 종료 후에는 리포트 데이터 저장 후 리포트 뷰로 전환. (latestReport 초기화 로직 제거)
+        function finalizeReportAndShowReport(studentId) {
+            if (!confirm(`${allStudents[studentId].name} 학생의 관찰을 종료하고 결과를 보시겠습니까?`)) return;
+
+            finalizeReport(studentId); // latestReport에 데이터 저장
+            
+            // 현재 보고 있는 리포트 학생 ID 저장
+            currentReportStudentId = studentId; 
+            
+            // 종료 후 리포트 표시 
+            renderReport(studentId, allStudents[studentId].latestReport);
+            
+            // 다른 학생이 관찰 중이면 Tracking 뷰를 업데이트
+            if (getActiveStudentIds().length > 0) {
+                renderActiveTracking(); 
+                updateLogDisplay();
+            } 
+            switchView('report');
+        }
+
+        // [수정] 전체 종료 시 모든 세션 종료 후 홈으로 돌아감
+        function stopAllTrackingAndGoHome() {
+            if (!confirm('현재 관찰 중인 모든 학생의 세션을 종료하고 학생 관리 화면으로 돌아가시겠습니까?')) return;
+
+            const activeIds = getActiveStudentIds();
+            
+            activeIds.forEach(id => {
+                 finalizeReport(id); // 모든 학생 리포트 데이터를 latestReport에 저장
+            });
+            
+            // 리포트 뷰 대신 홈 뷰로 전환
+            switchView('home');
+        }
+
+        // [수정] renderReport 함수
+        function renderReport(studentId, reportData = null) {
+            const studentData = allStudents[studentId];
+            const dataToUse = reportData || studentData.session; 
+            
+            // 리포트 제목의 학생 이름 설정
+            els.reportStudentName.textContent = studentData.name; 
+            
+            document.getElementById('report-date').textContent = new Date(dataToUse.endTime).toLocaleDateString();
+            
+            //... (Chart.js 로직 포함)
+            const diff = Math.floor((dataToUse.endTime - dataToUse.startTime) / 1000);
+            const mm = String(Math.floor(diff / 60)).padStart(2, '0');
+            const ss = String(diff % 60).padStart(2, '0');
+            document.getElementById('report-duration').textContent = `${mm}:${ss}`;
+            
+            const tbody = document.getElementById('report-table-body');
+            tbody.innerHTML = '';
+            
+            const totalCounts = Object.values(dataToUse.counts).reduce((a, b) => a + b, 0);
+
+            dataToUse.behaviors.forEach(b => {
+                const count = dataToUse.counts[b.id] || 0;
+                const percentage = totalCounts > 0 ? Math.round((count / totalCounts) * 100) : 0;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-gray-700 flex items-center gap-3">
+                        <span class="text-2xl">${b.icon}</span> ${b.name}
+                    </td>
+                    <td class="px-6 py-4 text-right font-black text-emerald-600 text-xl">
+                        ${count} <span class="text-xs font-normal text-gray-400 ml-0.5">stars</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-medium text-gray-500">${percentage}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const chartContainer = document.querySelector('#view-report .bg-gray-50.rounded-2xl.p-4');
+            chartContainer.innerHTML = '<canvas id="resultChart"></canvas>';
+            
+            new Chart(document.getElementById('resultChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: dataToUse.behaviors.map(b => b.name),
+                    datasets: [{
+                        label: '획득한 스티커',
+                        data: dataToUse.behaviors.map(b => dataToUse.counts[b.id] || 0),
+                        backgroundColor: ['rgba(79, 70, 229, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(245, 158, 11, 0.7)'],
+                        borderRadius: 8,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+
+        // --- Icon Picker Logic (Helper) ---
+
+        function openIconPicker(id) {
+            currentPickingId = id;
+            els.iconPickerModal.classList.remove('hidden');
+            els.iconPickerModal.classList.add('flex');
+        }
+
+        function closeIconPicker() {
+            els.iconPickerModal.classList.add('hidden');
+            els.iconPickerModal.classList.remove('flex');
+            currentPickingId = null;
+        }
+
+        function selectIcon(icon) {
+            if (currentPickingId) {
+                document.getElementById(`icon-btn-${currentPickingId}`).textContent = icon;
+                document.getElementById(`icon-val-${currentPickingId}`).value = icon;
+                saveConfig();
+            }
+            closeIconPicker();
+        }
+
+        // --- Init ---
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAllStudents();
+            switchView('home'); 
+        });
+
     </script>
 </body>
 </html>
