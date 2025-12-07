@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>행동 쑥쑥 카운터</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         body {
@@ -49,7 +46,6 @@
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-gray-800 bg-slate-100">
 
-    <!-- App Header -->
     <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 z-20 shrink-0">
         <div class="max-w-5xl mx-auto flex justify-between items-center w-full">
             <h1 class="text-xl md:text-2xl font-black text-emerald-600 flex items-center gap-2 cursor-pointer select-none" onclick="location.reload()">
@@ -64,10 +60,8 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-1 overflow-hidden relative w-full max-w-5xl mx-auto md:p-6">
         
-        <!-- VIEW 0: HOME / STUDENT SELECT SCREEN -->
         <section id="view-home" class="p-4 h-full flex flex-col justify-center items-center animate-fade-in overflow-y-auto">
             <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 w-full max-w-lg transition-all">
                 <div class="flex justify-between items-center mb-6 border-b pb-4">
@@ -78,9 +72,11 @@
                 </div>
                 
                 <div id="student-list-container" class="space-y-3 max-h-80 overflow-y-auto mb-6">
-                    <!-- Student Cards will be rendered here -->
-                </div>
-
+                    </div>
+                
+                <button id="start-all-tracking-btn" onclick="startAllStudentTracking()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-emerald-200 transition transform btn-press-effect flex justify-center items-center gap-2 mb-4 hidden">
+                    <span>🚀 일괄 관찰 시작하기</span>
+                </button>
                 <button onclick="editStudentConfig()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-indigo-200 transition transform btn-press-effect flex justify-center items-center gap-2">
                     <span>➕ 새로운 학생 등록하기</span>
                     <span class="text-2xl">✨</span>
@@ -89,12 +85,11 @@
         </section>
 
 
-        <!-- VIEW 1: SETUP SCREEN -->
         <section id="view-setup" class="p-4 h-full hidden flex-col justify-center items-center animate-fade-in overflow-y-auto">
             <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 w-full max-w-lg transition-all">
                 <div class="flex justify-between items-center mb-8">
                     <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                        <span>✏️</span> 관찰 설정 (<span id="setup-student-name">새 학생</span>)
+                        <span>✏️</span> 관찰 설정 (<span id="setup-student-name">학생명</span>)
                     </h2>
                     <span class="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">Step 1</span>
                 </div>
@@ -108,22 +103,19 @@
                     <div>
                         <label class="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">관찰 목표 행동</label>
                         <div class="space-y-3" id="behavior-inputs">
-                            <!-- Behavior 1 -->
-                            <div class="flex gap-3 items-center group">
+                            <div class="flex gap-3 items-center group" id="behavior-row-1">
                                 <button onclick="openIconPicker(1)" id="icon-btn-1" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">👀</button>
                                 <input type="hidden" id="icon-val-1" value="👀">
                                 <input type="text" id="behavior-1" value="눈 맞춤 하기" onchange="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 1">
                                 <button onclick="removeBehaviorInput(1)" class="w-10 h-10 flex-shrink-0 rounded-full bg-red-50 hover:bg-red-100 text-red-500 transition text-sm font-bold">X</button>
                             </div>
-                            <!-- Behavior 2 -->
-                            <div class="flex gap-3 items-center group">
+                            <div class="flex gap-3 items-center group" id="behavior-row-2">
                                 <button onclick="openIconPicker(2)" id="icon-btn-2" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">👂</button>
                                 <input type="hidden" id="icon-val-2" value="👂">
                                 <input type="text" id="behavior-2" value="바른 자세 유지" onchange="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 2">
                                 <button onclick="removeBehaviorInput(2)" class="w-10 h-10 flex-shrink-0 rounded-full bg-red-50 hover:bg-red-100 text-red-500 transition text-sm font-bold">X</button>
                             </div>
-                            <!-- Behavior 3 -->
-                            <div class="flex gap-3 items-center group">
+                            <div class="flex gap-3 items-center group" id="behavior-row-3">
                                 <button onclick="openIconPicker(3)" id="icon-btn-3" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">✨</button>
                                 <input type="hidden" id="icon-val-3" value="✨">
                                 <input type="text" id="behavior-3" value="" onchange="saveConfig()" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 3 (선택)">
@@ -144,12 +136,9 @@
             </div>
         </section>
 
-        <!-- VIEW 2: TRACKING SCREEN -->
         <section id="view-tracking" class="hidden h-full flex-col md:flex-row p-4 md:p-0 gap-6">
             
-            <!-- LEFT PANEL: Active Buttons -->
             <div class="flex-1 flex flex-col h-full min-h-0">
-                <!-- Top Info Bar -->
                 <div class="bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-100 flex justify-between items-center shrink-0 mb-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl">⏱️</div>
@@ -164,16 +153,12 @@
                     </div>
                 </div>
 
-                <!-- Visual Buttons Area (BIG CARDS) -->
                 <div class="flex-1 overflow-y-auto no-scrollbar pb-2">
-                    <!-- Buttons Container now holds panels for all active students -->
                     <div id="buttons-container" class="grid gap-4 h-full md:h-auto content-start">
-                        <!-- Dynamic Student Panels will be rendered here -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: Sidebar (Logs) -->
             <div class="h-48 md:h-full md:w-80 shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                     <h3 class="font-bold text-gray-600 text-sm flex items-center gap-2">
@@ -192,7 +177,6 @@
             </div>
         </section>
 
-        <!-- VIEW 3: REPORT SCREEN -->
         <section id="view-report" class="hidden h-full flex-col overflow-y-auto no-scrollbar p-4 md:p-0">
             <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-6 w-full">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-100 pb-6 gap-6">
@@ -205,7 +189,7 @@
                         </div>
                     </div>
                     <div class="flex gap-3 w-full md:w-auto">
-                        <button onclick="goToHome()" class="flex-1 md:flex-none px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-200 transition">새 관찰</button>
+                        <button onclick="goToHome()" class="flex-1 md:flex-none px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-200 transition">새로운 관찰</button>
                         <button onclick="window.print()" class="flex-1 md:flex-none px-6 py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition">인쇄</button>
                     </div>
                 </div>
@@ -229,7 +213,6 @@
             </div>
         </section>
 
-        <!-- ICON PICKER MODAL -->
         <div id="icon-picker-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center animate-fade-in backdrop-blur-sm">
             <div class="bg-white w-full max-w-xl h-[70vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
@@ -239,7 +222,6 @@
                 
                 <div class="flex-1 overflow-y-auto p-6 bg-white custom-scroll">
                     <div class="space-y-6">
-                        <!-- Categories -->
                         <div>
                             <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">🏫 학교 생활</h4>
                             <div class="icon-grid">
@@ -333,7 +315,8 @@
             iconPickerModal: document.getElementById('icon-picker-modal'),
             setupStudentName: document.getElementById('setup-student-name'),
             studentListContainer: document.getElementById('student-list-container'),
-            trackingStudentCount: document.getElementById('tracking-student-count')
+            trackingStudentCount: document.getElementById('tracking-student-count'),
+            startAllTrackingBtn: document.getElementById('start-all-tracking-btn') // 추가
         };
 
         let currentPickingId = null; 
@@ -389,7 +372,7 @@
 
         function saveConfig() {
             const studentId = state.currentStudentId || 'student-' + Date.now();
-            const studentName = document.getElementById('student-name').value || '새 학생';
+            const studentName = document.getElementById('student-name').value || '학생명';
 
             const config = {
                 b1: document.getElementById('behavior-1').value,
@@ -419,17 +402,19 @@
             // Handle behavior inputs dynamically to respect deletion
             for(let i=1; i<=3; i++) {
                 document.getElementById(`behavior-${i}`).value = config[`b${i}`] || '';
-                document.getElementById(`icon-val-${i}`).value = config[`icon${i}`] || (i === 1 ? '👀' : (i === 2 ? '👂' : '✨'));
+                // 기본값 설정 (아이콘 값이 없을 경우)
+                document.getElementById(`icon-val-${i}`).value = config[`icon${i}`] || (i === 1 ? '👀' : (i === 2 ? '👂' : '✨')); 
                 document.getElementById(`icon-btn-${i}`).textContent = document.getElementById(`icon-val-${i}`).value;
+                // [FIX] X 버튼을 누른 후 비어 있는 행은 감추지 않습니다. 대신 saveConfig에서 빈 값으로 저장됩니다.
             }
 
             // Set global state for the current context
             state.currentStudentId = id;
-            state.studentName = studentData.name || '새 학생';
+            state.studentName = studentData.name || '학생명';
             els.setupStudentName.textContent = state.studentName;
         }
         
-        // [FIX] Function to remove a behavior input row
+        // [FIXED] Function to remove a behavior input row - 빈 값으로 만들고 저장하여 실제 데이터에서 제거되도록 수정
         function removeBehaviorInput(id) {
             // Check how many non-empty behavior inputs exist
             const behaviorCount = [1, 2, 3].filter(i => document.getElementById(`behavior-${i}`).value.trim() !== '').length;
@@ -442,10 +427,11 @@
 
             // Clear the specific inputs and reset icon/value
             document.getElementById(`behavior-${id}`).value = '';
-            document.getElementById(`icon-val-${id}`).value = (id === 1 ? '👀' : (id === 2 ? '👂' : '✨'));
+            // 아이콘 값도 기본값(임시값)이나 빈 값으로 설정 (현재 셋업 화면의 입력 방식 유지)
+            document.getElementById(`icon-val-${id}`).value = (id === 1 ? '👀' : (id === 2 ? '👂' : '✨')); 
             document.getElementById(`icon-btn-${id}`).textContent = document.getElementById(`icon-val-${id}`).value;
             
-            saveConfig();
+            saveConfig(); // 변경된 설정 저장 (빈 행동은 저장되지 않음)
         }
 
 
@@ -475,11 +461,21 @@
         function renderHomeView() {
             els.studentListContainer.innerHTML = '';
             const studentIds = Object.keys(allStudents);
+            const activeIds = getActiveStudentIds(); // 관찰 중인 학생 수 확인
 
             if (studentIds.length === 0) {
                 els.studentListContainer.innerHTML = '<p class="text-center text-gray-400 py-10">등록된 학생이 없습니다. 아래 버튼을 눌러 시작하세요.</p>';
+                els.startAllTrackingBtn.classList.add('hidden');
                 return;
             }
+            
+            // 등록된 학생이 있고, 관찰 중인 학생이 없는 경우에만 일괄 관찰 시작 버튼 표시
+            if (studentIds.length > 0 && activeIds.length === 0) {
+                els.startAllTrackingBtn.classList.remove('hidden');
+            } else {
+                els.startAllTrackingBtn.classList.add('hidden');
+            }
+
 
             studentIds.forEach(id => {
                 const data = allStudents[id];
@@ -517,6 +513,54 @@
                 els.studentListContainer.appendChild(card);
             });
         }
+        
+        // [NEW] 모든 학생의 관찰을 일괄 시작하는 함수
+        function startAllStudentTracking() {
+            const studentIds = Object.keys(allStudents);
+            let hasValidBehavior = false;
+
+            // 모든 학생에 대해 startSession 실행
+            studentIds.forEach(id => {
+                const studentData = allStudents[id];
+                if (!studentData.session.isTracking) {
+                    
+                    const behaviors = [];
+                    for (let i = 1; i <= 3; i++) {
+                        const bName = studentData.config[`b${i}`];
+                        if (bName && bName.trim() !== '') {
+                             behaviors.push({
+                                id: `b${i}`,
+                                name: bName,
+                                icon: studentData.config[`icon${i}`],
+                                color: colors[i - 1]
+                            });
+                        }
+                    }
+
+                    if (behaviors.length > 0) {
+                        const counts = {};
+                        behaviors.forEach(b => counts[b.id] = 0);
+                        
+                        studentData.session = {
+                            isTracking: true,
+                            startTime: Date.now(),
+                            logs: [],
+                            counts,
+                            behaviors 
+                        };
+                        hasValidBehavior = true;
+                    }
+                }
+            });
+
+            if (hasValidBehavior) {
+                saveAllStudents();
+                switchView('tracking');
+            } else {
+                alert('관찰을 시작할 유효한 행동 설정이 있는 학생이 없습니다. 학생 설정 화면에서 최소 1개의 행동을 등록해주세요.');
+            }
+        }
+        // [/NEW]
 
         function handleStudentAction(id, isTracking) {
             const data = allStudents[id];
@@ -863,7 +907,8 @@
             activeIds.forEach(id => finalizeReport(id));
             
             if (activeIds.length > 0) {
-                renderReport(activeIds[activeIds.length - 1]);
+                // 마지막으로 종료된 학생의 리포트를 표시
+                renderReport(activeIds[activeIds.length - 1]); 
                 switchView('report');
             } else {
                 switchView('home');
@@ -957,7 +1002,7 @@
         // --- Init ---
         window.addEventListener('DOMContentLoaded', () => {
             loadAllStudents();
-            switchView('home'); // FIX: Always start at the Home view
+            switchView('home'); 
         });
 
     </script>
