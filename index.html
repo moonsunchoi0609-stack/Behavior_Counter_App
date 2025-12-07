@@ -181,7 +181,7 @@
             <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-6 w-full">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-100 pb-6 gap-6">
                     <div>
-                        <h2 class="text-3xl font-black text-gray-800 mb-2">📊 관찰 리포트</h2>
+                        <h2 class="text-3xl font-black text-gray-800 mb-2">📊 <span id="report-student-name"></span> 관찰 리포트</h2> 
                         <div class="flex gap-4 text-sm text-gray-500 font-medium">
                             <span id="report-date">2023. 00. 00</span>
                             <span class="text-gray-300">|</span>
@@ -276,7 +276,6 @@
 
     <script>
         // --- Core State Structure ---
-        // State holds configuration/report data for the student currently loaded into SETUP/REPORT view
         let state = {
             currentStudentId: null, 
             studentName: '',
@@ -288,7 +287,6 @@
             counts: {}, 
             isTracking: false 
         };
-        // All students data stored in local storage and managed here
         let allStudents = {}; 
         let globalTimerInterval = null; 
 
@@ -299,7 +297,7 @@
         ];
 
         // --- Persistence Keys & DOM Elements ---
-        const STORAGE_KEY_STUDENTS = 'behaviorApp_all_students_v8'; // Updated version key
+        const STORAGE_KEY_STUDENTS = 'behaviorApp_all_students_v8'; 
         const DEFAULT_STUDENT_ID = 'new-default-student';
 
         const els = {
@@ -316,7 +314,8 @@
             setupStudentName: document.getElementById('setup-student-name'),
             studentListContainer: document.getElementById('student-list-container'),
             trackingStudentCount: document.getElementById('tracking-student-count'),
-            startAllTrackingBtn: document.getElementById('start-all-tracking-btn') // 추가
+            startAllTrackingBtn: document.getElementById('start-all-tracking-btn'),
+            reportStudentName: document.getElementById('report-student-name') // 추가
         };
 
         let currentPickingId = null; 
@@ -414,7 +413,6 @@
             els.setupStudentName.textContent = state.studentName;
         }
         
-        // [FIXED] Function to remove a behavior input row - 빈 값으로 만들고 저장하여 실제 데이터에서 제거되도록 수정
         function removeBehaviorInput(id) {
             // Check how many non-empty behavior inputs exist
             const behaviorCount = [1, 2, 3].filter(i => document.getElementById(`behavior-${i}`).value.trim() !== '').length;
@@ -461,7 +459,7 @@
         function renderHomeView() {
             els.studentListContainer.innerHTML = '';
             const studentIds = Object.keys(allStudents);
-            const activeIds = getActiveStudentIds(); // 관찰 중인 학생 수 확인
+            const activeIds = getActiveStudentIds(); 
 
             if (studentIds.length === 0) {
                 els.studentListContainer.innerHTML = '<p class="text-center text-gray-400 py-10">등록된 학생이 없습니다. 아래 버튼을 눌러 시작하세요.</p>';
@@ -469,7 +467,6 @@
                 return;
             }
             
-            // 등록된 학생이 있고, 관찰 중인 학생이 없는 경우에만 일괄 관찰 시작 버튼 표시
             if (studentIds.length > 0 && activeIds.length === 0) {
                 els.startAllTrackingBtn.classList.remove('hidden');
             } else {
@@ -514,7 +511,6 @@
             });
         }
         
-        // [NEW] 모든 학생의 관찰을 일괄 시작하는 함수
         function startAllStudentTracking() {
             const studentIds = Object.keys(allStudents);
             let hasValidBehavior = false;
@@ -560,7 +556,7 @@
                 alert('관찰을 시작할 유효한 행동 설정이 있는 학생이 없습니다. 학생 설정 화면에서 최소 1개의 행동을 등록해주세요.');
             }
         }
-        // [/NEW]
+        
 
         function handleStudentAction(id, isTracking) {
             const data = allStudents[id];
@@ -915,9 +911,13 @@
             }
         }
 
+        // [수정된 부분] renderReport 함수에 학생 이름 표시 로직 추가
         function renderReport(studentId) {
             const studentData = allStudents[studentId];
             const session = studentData.session;
+            
+            // 학생 이름 표시
+            els.reportStudentName.textContent = studentData.name; 
             
             document.getElementById('report-date').textContent = new Date(session.endTime).toLocaleDateString();
             
