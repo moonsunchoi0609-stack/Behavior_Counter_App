@@ -12,7 +12,7 @@
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #F1F5F9; /* Slate-100 */
             touch-action: manipulation;
-            overscroll-behavior: none;
+            overflow-x: hidden; /* Prevent horizontal scroll */
         }
         .btn-press-effect:active {
             transform: scale(0.98);
@@ -132,6 +132,7 @@
 
                 <button onclick="switchView('home')" class="w-full mt-4 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition">
                     저장 및 학생 추가/설정
+                </button>
             </div>
         </section>
 
@@ -188,7 +189,9 @@
                         </div>
                     </div>
                     <div class="flex gap-3 w-full md:w-auto">
-                        <button onclick="goToHome()" class="flex-1 md:flex-none px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-200 transition">새로운 관찰</button>
+                        <button onclick="switchView('home')" class="flex-1 md:flex-none px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 shadow-lg shadow-indigo-200 transition">학생 관리 화면</button>
+                        
+                        <button id="report-complete-btn" onclick="clearLatestReportAndGoHome()" class="flex-1 md:flex-none px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-200 transition">리포트 완료/숨기기</button>
                         <button onclick="window.print()" class="flex-1 md:flex-none px-6 py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition">인쇄</button>
                     </div>
                 </div>
@@ -286,6 +289,9 @@
             counts: {}, 
             isTracking: false 
         };
+        // 현재 리포트 뷰에 표시 중인 학생 ID를 저장합니다.
+        let currentReportStudentId = null; 
+        
         let allStudents = {}; 
         let globalTimerInterval = null; 
 
@@ -314,7 +320,8 @@
             studentListContainer: document.getElementById('student-list-container'),
             trackingStudentCount: document.getElementById('tracking-student-count'),
             startAllTrackingBtn: document.getElementById('start-all-tracking-btn'),
-            reportStudentName: document.getElementById('report-student-name') // 추가
+            reportStudentName: document.getElementById('report-student-name'),
+            reportCompleteBtn: document.getElementById('report-complete-btn') // 추가
         };
 
         let currentPickingId = null; 
@@ -346,17 +353,16 @@
             }
         }
 
-        function saveStudentData(id, name, config, session, latestReport = null) { // latestReport 매개변수 추가
-        allStudents[id] = {
-            id,
-            name,
-            config,
-            session: session || allStudents[id]?.session || { isTracking: false },
-            // 새로운 필드: 세션 종료 시 생성된 리포트 데이터를 저장합니다.
-            latestReport: latestReport || allStudents[id]?.latestReport || null 
-        };
-        saveAllStudents();
-    }
+        function saveStudentData(id, name, config, session, latestReport = null) { 
+            allStudents[id] = {
+                id,
+                name,
+                config,
+                session: session || allStudents[id]?.session || { isTracking: false },
+                latestReport: latestReport || allStudents[id]?.latestReport || null 
+            };
+            saveAllStudents();
+        }
         
         function deleteStudent(id) {
             if (confirm(`${allStudents[id].name} 학생의 모든 데이터를 삭제하시겠습니까?`)) {
@@ -405,7 +411,6 @@
                 // 기본값 설정 (아이콘 값이 없을 경우)
                 document.getElementById(`icon-val-${i}`).value = config[`icon${i}`] || (i === 1 ? '👀' : (i === 2 ? '👂' : '✨')); 
                 document.getElementById(`icon-btn-${i}`).textContent = document.getElementById(`icon-val-${i}`).value;
-                // [FIX] X 버튼을 누른 후 비어 있는 행은 감추지 않습니다. 대신 saveConfig에서 빈 값으로 저장됩니다.
             }
 
             // Set global state for the current context
@@ -426,7 +431,7 @@
 
             // Clear the specific inputs and reset icon/value
             document.getElementById(`behavior-${id}`).value = '';
-            // 아이콘 값도 기본값(임시값)이나 빈 값으로 설정 (현재 셋업 화면의 입력 방식 유지)
+            // 아이콘 값도 기본값(임시값)이나 빈 값으로 설정
             document.getElementById(`icon-val-${id}`).value = (id === 1 ? '👀' : (id === 2 ? '👂' : '✨')); 
             document.getElementById(`icon-btn-${id}`).textContent = document.getElementById(`icon-val-${id}`).value;
             
@@ -458,568 +463,203 @@
         }
 
         function renderHomeView() {
-        els.studentListContainer.innerHTML = '';
-        const studentIds = Object.keys(allStudents);
-        const activeIds = getActiveStudentIds(); 
-
-        if (studentIds.length === 0) {
-            els.studentListContainer.innerHTML = '<p class="text-center text-gray-400 py-10">등록된 학생이 없습니다. 아래 버튼을 눌러 시작하세요.</p>';
-            els.startAllTrackingBtn.classList.add('hidden');
-            return;
-        }
-        
-        if (studentIds.length > 0 && activeIds.length === 0) {
-            // 모든 학생이 관찰 종료 상태일 때 리포트를 볼 수 있도록 버튼 숨김/표시 로직 유지
-            els.startAllTrackingBtn.classList.remove('hidden');
-        } else {
-            els.startAllTrackingBtn.classList.add('hidden');
-        }
-
-
-        studentIds.forEach(id => {
-            const data = allStudents[id];
-            const isTracking = data.session?.isTracking;
-            const hasReport = !!data.latestReport; // 저장된 리포트 데이터가 있는지 확인
-
-            const card = document.createElement('div');
-            card.className = `
-                flex items-center justify-between p-4 rounded-xl border-2 shadow-sm transition-all
-                ${isTracking ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-100' : 'bg-white border-gray-100 hover:border-indigo-300'}
-            `;
-
-            let statusText = isTracking ? 
-                `<span class="text-emerald-600 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 관찰 중</span>` : 
-                (hasReport ? `<span class="text-indigo-600">리포트 대기 중</span>` : `<span class="text-gray-400">설정 완료</span>`);
-
-            let actionButton = '';
-            if (isTracking) {
-                actionButton = `<button onclick="handleStudentAction('${id}', ${isTracking})" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 transition shadow-md">관찰 재개/보기</button>`;
-            } else if (hasReport) {
-                // [수정] 리포트가 있으면 "리포트 보기" 버튼 활성화
-                actionButton = `<button onclick="showReportFromHome('${id}')" class="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-bold hover:bg-pink-600 transition shadow-md">리포트 보기</button>`;
-            } else {
-                 actionButton = `<button onclick="handleStudentAction('${id}', ${isTracking})" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 transition shadow-md">설정/시작</button>`;
-            }
-
-
-            card.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">🧑‍🎓</span>
-                    <div>
-                        <span class="text-lg font-bold text-gray-800">${data.name}</span>
-                        <div class="text-xs text-gray-500">${statusText}</div>
-                    </div>
-                </div>
-                <div class="flex gap-2">
-                    ${actionButton}
-                    <button onclick="deleteStudent('${id}')" 
-                            class="w-8 h-8 rounded-full bg-gray-100 hover:bg-red-50 text-red-400 transition text-sm">
-                        🗑️
-                    </button>
-                </div>
-            `;
-            els.studentListContainer.appendChild(card);
-        });
-    }
-
-    // [NEW] 홈 화면에서 리포트 보기 버튼 클릭 시 실행
-    function showReportFromHome(studentId) {
-        const studentData = allStudents[studentId];
-        if (studentData.latestReport) {
-            renderReport(studentId, studentData.latestReport); // 저장된 리포트 데이터를 사용
-            studentData.latestReport = null; // 리포트 확인 후 데이터 비우기 (선택 사항)
-            saveAllStudents();
-            renderHomeView(); // 홈 화면 리렌더링 (옵션)
-            switchView('report');
-        } else {
-            alert('저장된 리포트 데이터가 없습니다.');
-        }
-    }
-        
-        function startAllStudentTracking() {
+            els.studentListContainer.innerHTML = '';
             const studentIds = Object.keys(allStudents);
-            let hasValidBehavior = false;
+            const activeIds = getActiveStudentIds(); 
 
-            // 모든 학생에 대해 startSession 실행
+            if (studentIds.length === 0) {
+                els.studentListContainer.innerHTML = '<p class="text-center text-gray-400 py-10">등록된 학생이 없습니다. 아래 버튼을 눌러 시작하세요.</p>';
+                els.startAllTrackingBtn.classList.add('hidden');
+                return;
+            }
+            
+            if (studentIds.length > 0 && activeIds.length === 0) {
+                els.startAllTrackingBtn.classList.remove('hidden');
+            } else {
+                els.startAllTrackingBtn.classList.add('hidden');
+            }
+
+
             studentIds.forEach(id => {
-                const studentData = allStudents[id];
-                if (!studentData.session.isTracking) {
-                    
-                    const behaviors = [];
-                    for (let i = 1; i <= 3; i++) {
-                        const bName = studentData.config[`b${i}`];
-                        if (bName && bName.trim() !== '') {
-                             behaviors.push({
-                                id: `b${i}`,
-                                name: bName,
-                                icon: studentData.config[`icon${i}`],
-                                color: colors[i - 1]
-                            });
-                        }
-                    }
+                const data = allStudents[id];
+                const isTracking = data.session?.isTracking;
+                const hasReport = !!data.latestReport; // 저장된 리포트 데이터가 있는지 확인
 
-                    if (behaviors.length > 0) {
-                        const counts = {};
-                        behaviors.forEach(b => counts[b.id] = 0);
-                        
-                        studentData.session = {
-                            isTracking: true,
-                            startTime: Date.now(),
-                            logs: [],
-                            counts,
-                            behaviors 
-                        };
-                        hasValidBehavior = true;
-                    }
-                }
-            });
-
-            if (hasValidBehavior) {
-                saveAllStudents();
-                switchView('tracking');
-            } else {
-                alert('관찰을 시작할 유효한 행동 설정이 있는 학생이 없습니다. 학생 설정 화면에서 최소 1개의 행동을 등록해주세요.');
-            }
-        }
-        
-
-        function handleStudentAction(id, isTracking) {
-            const data = allStudents[id];
-            
-            if (isTracking) {
-                renderActiveTracking();
-                switchView('tracking');
-            } else {
-                editStudentConfig(id, data);
-            }
-        }
-
-        function editStudentConfig(id = null, data = null) {
-            const newId = id || 'student-' + Date.now();
-            loadConfig(newId, data);
-            switchView('setup');
-        }
-
-        // --- Global Tracking Management ---
-        function getActiveStudentIds() {
-            return Object.keys(allStudents).filter(id => allStudents[id].session?.isTracking);
-        }
-
-        function startGlobalTimer() {
-            if (globalTimerInterval) clearInterval(globalTimerInterval);
-            updateGlobalTimerDisplay();
-            globalTimerInterval = setInterval(updateGlobalTimerDisplay, 1000);
-        }
-
-        function updateGlobalTimerDisplay() {
-            const activeIds = getActiveStudentIds();
-            els.trackingStudentCount.textContent = `${activeIds.length}명`;
-
-            if (activeIds.length === 0) {
-                if (globalTimerInterval) clearInterval(globalTimerInterval);
-                els.timerDisplay.textContent = '00:00';
-                return;
-            }
-            
-            let earliestStart = Infinity;
-            activeIds.forEach(id => {
-                if (allStudents[id].session.startTime < earliestStart) {
-                    earliestStart = allStudents[id].session.startTime;
-                }
-            });
-
-            const now = Date.now();
-            const diff = Math.floor((now - earliestStart) / 1000);
-            if (diff < 0 || earliestStart === Infinity) { els.timerDisplay.textContent = "00:00"; return; }
-            const mm = String(Math.floor(diff / 60)).padStart(2, '0');
-            const ss = String(diff % 60).padStart(2, '0');
-            els.timerDisplay.textContent = `${mm}:${ss}`;
-        }
-
-        // --- Core Session Logic ---
-
-        function startSession() {
-            saveConfig();
-            
-            const studentId = state.currentStudentId;
-            const studentData = allStudents[studentId];
-            
-            const config = studentData.config;
-            const behaviors = [];
-            for (let i = 1; i <= 3; i++) {
-                const bName = config[`b${i}`];
-                if (bName && bName.trim() !== '') {
-                    behaviors.push({
-                        id: `b${i}`,
-                        name: bName,
-                        icon: config[`icon${i}`],
-                        color: colors[i - 1]
-                    });
-                }
-            }
-
-            if (behaviors.length === 0) {
-                alert('최소 1개의 행동을 입력해주세요.');
-                return;
-            }
-            
-            const counts = {};
-            behaviors.forEach(b => counts[b.id] = 0);
-            
-            studentData.session = {
-                isTracking: true,
-                startTime: Date.now(),
-                logs: [],
-                counts,
-                behaviors 
-            };
-
-            saveAllStudents();
-            switchView('tracking');
-        }
-
-        function recordBehavior(studentId, behavior) {
-            const student = allStudents[studentId];
-            const session = student.session;
-            session.counts[behavior.id] = (session.counts[behavior.id] || 0) + 1;
-            
-            const count = session.counts[behavior.id];
-            
-            const numEl = document.getElementById(`num-count-${studentId}-${behavior.id}`);
-            if(numEl) numEl.textContent = count;
-
-            const board = document.getElementById(`sticker-board-${studentId}-${behavior.id}`);
-            if(board) {
-                if(count === 1) board.innerHTML = ''; 
-                
-                const maxVisuals = 15;
-                if (count <= maxVisuals) {
-                    const span = document.createElement('span');
-                    span.className = `token-animate text-xl leading-none ${(count > 1 && (count-1) % 5 === 0) ? 'ml-1' : ''}`;
-                    span.textContent = '⭐';
-                    board.appendChild(span);
-                } else {
-                    const affectedContainer = document.getElementById(`student-buttons-${studentId}`);
-                    if(affectedContainer) renderBehaviorButtons(studentId, affectedContainer);
-                }
-            }
-
-            const now = Date.now();
-            const diff = Math.floor((now - session.startTime) / 1000);
-            const mm = String(Math.floor(diff / 60)).padStart(2, '0');
-            const ss = String(diff % 60).padStart(2, '0');
-
-            session.logs.push({
-                studentId,
-                studentName: student.name,
-                behaviorId: behavior.id,
-                behaviorName: behavior.name,
-                behaviorIcon: behavior.icon,
-                timestamp: now,
-                timeString: `${mm}:${ss}`,
-                colorClass: behavior.color.text
-            });
-
-            updateLogDisplay();
-            saveAllStudents();
-            
-            els.saveStatus.classList.remove('hidden');
-            els.saveStatus.classList.add('flex');
-            setTimeout(() => {
-                els.saveStatus.classList.add('hidden');
-                els.saveStatus.classList.remove('flex');
-            }, 1500);
-        }
-
-        function renderActiveTracking() {
-            const activeIds = getActiveStudentIds();
-            const container = document.getElementById('buttons-container');
-            container.innerHTML = '';
-            
-            if (activeIds.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-400 py-20">관찰 중인 학생이 없습니다. 학생 관리 화면에서 관찰을 시작하세요.</p>';
-                return;
-            }
-
-            const numActive = activeIds.length;
-            let gridClass = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'; 
-            if (numActive > 4) {
-                gridClass = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-            }
-            
-            container.className = `grid ${gridClass} gap-4 h-full md:h-auto content-start`;
-
-
-            activeIds.forEach(id => {
-                const studentData = allStudents[id];
-                
-                const panel = document.createElement('div');
-                panel.className = `
-                    bg-white rounded-3xl p-4 shadow-xl border-4 border-gray-100 
-                    flex flex-col min-h-[300px] overflow-hidden
+                const card = document.createElement('div');
+                card.className = `
+                    flex items-center justify-between p-4 rounded-xl border-2 shadow-sm transition-all
+                    ${isTracking ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-100' : 
+                      (hasReport ? 'bg-pink-50 border-pink-400 ring-2 ring-pink-100' : 'bg-white border-gray-100 hover:border-indigo-300')}
                 `;
-                
-                panel.innerHTML = `
-                    <div class="flex items-center justify-between mb-3 border-b pb-2">
-                        <span class="text-xl font-black text-gray-800 flex items-center gap-2">
-                            <span class="text-2xl">🧑‍🎓</span> ${studentData.name}
-                        </span>
-                        <button onclick="finalizeReportAndShowReport('${id}')" class="px-3 py-1 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition shadow-sm">
-                            개별 종료
+
+                let statusText = isTracking ? 
+                    `<span class="text-emerald-600 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 관찰 중</span>` : 
+                    (hasReport ? `<span class="text-pink-600 font-bold">📄 리포트 대기 중</span>` : `<span class="text-gray-400">설정 완료</span>`);
+
+                let actionButton = '';
+                if (isTracking) {
+                    actionButton = `<button onclick="handleStudentAction('${id}', ${isTracking})" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 transition shadow-md">관찰 재개/보기</button>`;
+                } else if (hasReport) {
+                    // 리포트가 있으면 "리포트 보기" 버튼 활성화
+                    actionButton = `<button onclick="showReportFromHome('${id}')" class="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-bold hover:bg-pink-600 transition shadow-md">리포트 보기</button>`;
+                } else {
+                     actionButton = `<button onclick="handleStudentAction('${id}', ${isTracking})" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold hover:bg-indigo-600 transition shadow-md">설정/시작</button>`;
+                }
+
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🧑‍🎓</span>
+                        <div>
+                            <span class="text-lg font-bold text-gray-800">${data.name}</span>
+                            <div class="text-xs text-gray-500">${statusText}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${actionButton}
+                        <button onclick="deleteStudent('${id}')" 
+                                class="w-8 h-8 rounded-full bg-gray-100 hover:bg-red-50 text-red-400 transition text-sm">
+                            🗑️
                         </button>
                     </div>
-                    <div id="student-buttons-${id}" class="flex-1 grid gap-2">
-                    </div>
                 `;
-                container.appendChild(panel);
-                
-                const btnContainer = document.getElementById(`student-buttons-${id}`);
-                renderBehaviorButtons(id, btnContainer);
+                els.studentListContainer.appendChild(card);
             });
         }
 
-        function renderBehaviorButtons(studentId, container) {
-            const session = allStudents[studentId].session;
-            const behaviors = session.behaviors || [];
-            
-            const numBehaviors = behaviors.length;
-            let buttonGridClass = 'grid-cols-1';
-            if (numBehaviors === 2 || numBehaviors === 3) {
-                buttonGridClass = 'grid-cols-2';
-            }
-
-            container.className = `grid ${buttonGridClass} gap-3`;
-            container.innerHTML = ''; 
-
-            behaviors.forEach(b => {
-                const count = session.counts[b.id] || 0;
-                
-                let visualTokensHtml = '';
-                const maxVisuals = 15; 
-                const displayCount = Math.min(count, maxVisuals);
-                
-                for(let i=0; i<displayCount; i++) {
-                    const extraMargin = (i > 0 && i % 5 === 0) ? 'ml-1' : '';
-                    visualTokensHtml += `<span class="token-animate text-xl leading-none ${extraMargin}">⭐</span>`;
-                }
-
-                if (count > maxVisuals) {
-                    visualTokensHtml += `<span class="text-sm font-bold bg-white/50 px-1 rounded ml-1">+${count - maxVisuals}</span>`;
-                }
-
-                const btn = document.createElement('div');
-                btn.className = `
-                    relative w-full min-h-[150px] rounded-2xl border-2 transition-all duration-100 
-                    flex flex-col p-3 cursor-pointer select-none btn-press-effect active:scale-[0.98] shadow-md hover:shadow-lg
-                    ${b.color.bg} ${b.color.border} ${b.color.hover}
-                `;
-                
-                btn.onclick = () => recordBehavior(studentId, b);
-
-                btn.innerHTML = `
-                    <div class="flex justify-between items-start mb-2 pointer-events-none">
-                        <div class="flex items-center gap-2">
-                            <span class="text-4xl filter drop-shadow-sm">${b.icon}</span>
-                            <span class="text-lg font-black ${b.color.text} leading-tight">${b.name}</span>
-                        </div>
-                        <div class="bg-white/80 backdrop-blur-sm px-3 py-1 rounded-xl shadow-sm border border-white/50">
-                            <span id="num-count-${studentId}-${b.id}" class="text-3xl font-black ${b.color.text} tabular-nums">${count}</span>
-                        </div>
-                    </div>
-                    
-                    <div id="sticker-board-${studentId}-${b.id}" class="flex-1 bg-white/40 rounded-xl p-2 flex flex-wrap content-start items-start gap-0.5 pointer-events-none shadow-inner min-h-[80px]">
-                        ${count === 0 ? '<span class="text-gray-400/50 text-xs font-bold w-full text-center mt-6">터치하여 스티커 붙이기</span>' : visualTokensHtml}
-                    </div>
-                    
-                    <div class="absolute inset-0 bg-white opacity-0 hover:opacity-10 active:opacity-20 transition-opacity rounded-2xl pointer-events-none"></div>
-                `;
-                container.appendChild(btn);
-            });
-        }
-
-        function updateLogDisplay() {
-            els.logList.innerHTML = '';
-            
-            let allLogs = [];
-            getActiveStudentIds().forEach(id => {
-                allLogs = allLogs.concat(allStudents[id].session.logs);
-            });
-            
-            allLogs.sort((a, b) => b.timestamp - a.timestamp);
-
-            allLogs.slice(0, 50).forEach(log => {
-                const li = document.createElement('li');
-                li.className = "flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm animate-fade-in mb-2";
-                li.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="text-2xl bg-gray-50 p-1.5 rounded-lg border border-gray-100">${log.behaviorIcon}</span>
-                        <div class="flex flex-col">
-                            <span class="font-bold text-gray-700 text-sm">${log.behaviorName}</span>
-                            <span class="text-xs text-gray-400 font-medium">${log.studentName}</span> 
-                        </div>
-                    </div>
-                    <span class="text-xs font-mono font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded border border-gray-100">${log.timeString}</span>
-                `;
-                els.logList.appendChild(li);
-            });
-            
-            if (allLogs.length === 0) {
-                els.logList.innerHTML = '<li class="text-center text-gray-400 py-10 text-sm font-medium">기록 없음</li>';
+        // 홈 화면에서 리포트 보기 버튼 클릭 시 실행
+        function showReportFromHome(studentId) {
+            const studentData = allStudents[studentId];
+            if (studentData.latestReport) {
+                currentReportStudentId = studentId; // 현재 보고 있는 리포트 학생 ID 저장
+                renderReport(studentId, studentData.latestReport); 
+                switchView('report');
+            } else {
+                alert('저장된 리포트 데이터가 없습니다.');
             }
         }
+        
+        // [New] 리포트 확인 완료 후, 리포트 데이터만 삭제하고 홈 화면으로 돌아가는 함수
+        function clearLatestReportAndGoHome() {
+            if (!currentReportStudentId) {
+                switchView('home');
+                return;
+            }
 
-        function undoLastLog() {
-            let allLogs = [];
-            getActiveStudentIds().forEach(id => {
-                allLogs = allLogs.concat(allStudents[id].session.logs);
+            const studentId = currentReportStudentId;
+            const studentData = allStudents[studentId];
+
+            if (confirm(`${studentData.name} 학생의 리포트 확인을 완료하고 목록에서 숨기시겠습니까?`)) {
+                // latestReport만 null로 설정
+                studentData.latestReport = null;
+                saveAllStudents();
+                currentReportStudentId = null;
+                switchView('home');
+            }
+        }
+        
+        // ... (중략) ... 
+
+        // [수정] 개별 종료 후에는 리포트 데이터 저장 후 리포트 뷰로 전환. (latestReport 초기화 로직 제거)
+        function finalizeReportAndShowReport(studentId) {
+            if (!confirm(`${allStudents[studentId].name} 학생의 관찰을 종료하고 결과를 보시겠습니까?`)) return;
+
+            finalizeReport(studentId); // latestReport에 데이터 저장
+            
+            // 현재 보고 있는 리포트 학생 ID 저장
+            currentReportStudentId = studentId; 
+            
+            // 종료 후 리포트 표시 
+            renderReport(studentId, allStudents[studentId].latestReport);
+            
+            // 다른 학생이 관찰 중이면 Tracking 뷰를 업데이트
+            if (getActiveStudentIds().length > 0) {
+                renderActiveTracking(); 
+                updateLogDisplay();
+            } 
+            switchView('report');
+        }
+        
+        // [수정] 전체 종료 시 모든 세션 종료 후 홈으로 돌아감
+        function stopAllTrackingAndGoHome() {
+            if (!confirm('현재 관찰 중인 모든 학생의 세션을 종료하고 학생 관리 화면으로 돌아가시겠습니까?')) return;
+
+            const activeIds = getActiveStudentIds();
+            
+            activeIds.forEach(id => {
+                 finalizeReport(id); // 모든 학생 리포트 데이터를 latestReport에 저장
             });
             
-            if (allLogs.length === 0) return;
-            
-            allLogs.sort((a, b) => b.timestamp - a.timestamp);
-            const lastLog = allLogs[0];
-            
-            const session = allStudents[lastLog.studentId].session;
-
-            const logIndex = session.logs.findIndex(log => log.timestamp === lastLog.timestamp);
-            if (logIndex !== -1) {
-                session.logs.splice(logIndex, 1);
-            }
-            
-            if (session.counts[lastLog.behaviorId] > 0) {
-                session.counts[lastLog.behaviorId]--;
-            }
-            
-            const affectedContainer = document.getElementById(`student-buttons-${lastLog.studentId}`);
-            if (affectedContainer) {
-                renderBehaviorButtons(lastLog.studentId, affectedContainer);
-            }
-
-            updateLogDisplay();
-            saveAllStudents();
-        }
-
-        function finalizeReport(studentId) {
-        const studentData = allStudents[studentId];
-        const session = studentData.session;
-        session.endTime = Date.now();
-        session.isTracking = false;
-
-        // [수정] 세션 종료 시 리포트 데이터를 생성하여 latestReport 필드에 저장
-        const reportData = {
-            startTime: session.startTime,
-            endTime: session.endTime,
-            behaviors: session.behaviors,
-            counts: session.counts
-        };
-
-        saveStudentData(studentId, studentData.name, studentData.config, session, reportData);
-    }
-    
-    // [수정] 개별 종료 후에는 즉시 리포트 뷰로 전환
-    function finalizeReportAndShowReport(studentId) {
-        if (!confirm(`${allStudents[studentId].name} 학생의 관찰을 종료하고 결과를 보시겠습니까?`)) return;
-
-        finalizeReport(studentId); // 여기서 latestReport에 데이터가 저장됨
-        
-        // 종료 후 리포트 표시 (다른 학생 관찰 중이어도 됨)
-        renderReport(studentId, allStudents[studentId].latestReport);
-        allStudents[studentId].latestReport = null; // 리포트 확인 후 데이터 비우기 (선택 사항)
-        saveAllStudents(); 
-        
-        // 다른 학생이 관찰 중이면 Tracking 뷰로 돌아감
-        if (getActiveStudentIds().length > 0) {
-            renderActiveTracking(); 
-            updateLogDisplay();
-        } 
-        switchView('report');
-    }
-
-    // [수정] 전체 종료 시 모든 세션 종료 후 홈으로 돌아감
-    function stopAllTrackingAndGoHome() {
-        if (!confirm('현재 관찰 중인 모든 학생의 세션을 종료하고 학생 관리 화면으로 돌아가시겠습니까?')) return;
-
-        const activeIds = getActiveStudentIds();
-        let lastEndedId = null;
-        
-        activeIds.forEach(id => {
-             finalizeReport(id); // 모든 학생 리포트 데이터를 latestReport에 저장
-             lastEndedId = id;
-        });
-        
-        // [수정] 리포트 뷰 대신 홈 뷰로 전환하여 사용자가 원하는 리포트를 선택하게 함
-        if (activeIds.length > 0) {
-             switchView('home');
-        } else {
-             switchView('home');
-        }
-    }
-
-    // [수정] renderReport 함수가 저장된 리포트 데이터를 받도록 수정
-    function renderReport(studentId, reportData = null) {
-        const studentData = allStudents[studentId];
-        // reportData가 전달되면 사용, 아니면 현재 session 데이터를 사용 (단일 종료 시 사용)
-        const dataToUse = reportData || studentData.session; 
-        
-        // 학생 이름 표시
-        els.reportStudentName.textContent = studentData.name; 
-        
-        document.getElementById('report-date').textContent = new Date(dataToUse.endTime).toLocaleDateString();
-        
-        const diff = Math.floor((dataToUse.endTime - dataToUse.startTime) / 1000);
-        const mm = String(Math.floor(diff / 60)).padStart(2, '0');
-        const ss = String(diff % 60).padStart(2, '0');
-        document.getElementById('report-duration').textContent = `${mm}:${ss}`;
-        
-        const tbody = document.getElementById('report-table-body');
-        tbody.innerHTML = '';
-        
-        const totalCounts = Object.values(dataToUse.counts).reduce((a, b) => a + b, 0);
-
-        dataToUse.behaviors.forEach(b => {
-            const count = dataToUse.counts[b.id] || 0;
-            const percentage = totalCounts > 0 ? Math.round((count / totalCounts) * 100) : 0;
-            
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="px-6 py-4 font-bold text-gray-700 flex items-center gap-3">
-                    <span class="text-2xl">${b.icon}</span> ${b.name}
-                </td>
-                <td class="px-6 py-4 text-right font-black text-emerald-600 text-xl">
-                    ${count} <span class="text-xs font-normal text-gray-400 ml-0.5">stars</span>
-                </td>
-                <td class="px-6 py-4 text-right font-medium text-gray-500">${percentage}%</td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        const chartContainer = document.querySelector('#view-report .bg-gray-50.rounded-2xl.p-4');
-        chartContainer.innerHTML = '<canvas id="resultChart"></canvas>';
-        
-        new Chart(document.getElementById('resultChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: dataToUse.behaviors.map(b => b.name),
-                datasets: [{
-                    label: '획득한 스티커',
-                    data: dataToUse.behaviors.map(b => dataToUse.counts[b.id] || 0),
-                    backgroundColor: ['rgba(79, 70, 229, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(245, 158, 11, 0.7)'],
-                    borderRadius: 8,
-                    barThickness: 40
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-            }
-        });
-    }
-
-        function goToHome() {
+            // 리포트 뷰 대신 홈 뷰로 전환
             switchView('home');
         }
+
+        // [수정] renderReport 함수
+        function renderReport(studentId, reportData = null) {
+            const studentData = allStudents[studentId];
+            const dataToUse = reportData || studentData.session; 
+            
+            // 리포트 제목의 학생 이름 설정
+            els.reportStudentName.textContent = studentData.name; 
+            
+            document.getElementById('report-date').textContent = new Date(dataToUse.endTime).toLocaleDateString();
+            
+            // ... (나머지 리포트 생성 로직 유지) ...
+            const diff = Math.floor((dataToUse.endTime - dataToUse.startTime) / 1000);
+            const mm = String(Math.floor(diff / 60)).padStart(2, '0');
+            const ss = String(diff % 60).padStart(2, '0');
+            document.getElementById('report-duration').textContent = `${mm}:${ss}`;
+            
+            const tbody = document.getElementById('report-table-body');
+            tbody.innerHTML = '';
+            
+            const totalCounts = Object.values(dataToUse.counts).reduce((a, b) => a + b, 0);
+
+            dataToUse.behaviors.forEach(b => {
+                const count = dataToUse.counts[b.id] || 0;
+                const percentage = totalCounts > 0 ? Math.round((count / totalCounts) * 100) : 0;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-gray-700 flex items-center gap-3">
+                        <span class="text-2xl">${b.icon}</span> ${b.name}
+                    </td>
+                    <td class="px-6 py-4 text-right font-black text-emerald-600 text-xl">
+                        ${count} <span class="text-xs font-normal text-gray-400 ml-0.5">stars</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-medium text-gray-500">${percentage}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const chartContainer = document.querySelector('#view-report .bg-gray-50.rounded-2xl.p-4');
+            chartContainer.innerHTML = '<canvas id="resultChart"></canvas>';
+            
+            new Chart(document.getElementById('resultChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: dataToUse.behaviors.map(b => b.name),
+                    datasets: [{
+                        label: '획득한 스티커',
+                        data: dataToUse.behaviors.map(b => dataToUse.counts[b.id] || 0),
+                        backgroundColor: ['rgba(79, 70, 229, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(245, 158, 11, 0.7)'],
+                        borderRadius: 8,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+
+        // 이 함수는 이제 사용되지 않음 (버튼 텍스트 변경으로 대체됨)
+        // function goToHome() {
+        //     switchView('home');
+        // }
 
         // --- Icon Picker Logic (Helper) ---
 
