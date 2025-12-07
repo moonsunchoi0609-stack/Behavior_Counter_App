@@ -3,386 +3,645 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>행동 쑥쑥 카운터 - 행동 빈도 기록기</title>
+    <title>행동 쑥쑥 카운터 (큰 카드 모드)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: #F3F4F6; /* Gray-100 */
+            background-color: #F1F5F9; /* Slate-100 */
             touch-action: manipulation;
+            overscroll-behavior: none;
         }
         .btn-press-effect:active {
-            transform: scale(0.95);
+            transform: scale(0.98);
         }
-        /* Hide scrollbar for clean UI */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* Token Animation */
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .token-animate {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Icon Grid */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+        }
+        
+        @media (max-width: 640px) {
+            .icon-grid { grid-template-columns: repeat(4, 1fr); gap: 0.25rem; }
         }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden text-gray-800">
+<body class="h-screen flex flex-col overflow-hidden text-gray-800 bg-slate-100">
 
     <!-- App Header -->
-    <header class="bg-white shadow-sm p-4 z-10 shrink-0">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold text-emerald-600 flex items-center">
-                <span class="text-2xl mr-2">🌱</span> 행동 쑥쑥 카운터
+    <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 z-20 shrink-0">
+        <div class="max-w-5xl mx-auto flex justify-between items-center w-full">
+            <h1 class="text-xl md:text-2xl font-black text-emerald-600 flex items-center gap-2 cursor-pointer select-none" onclick="location.reload()">
+                <span>🌱</span> 행동 쑥쑥
             </h1>
-            <div id="header-status" class="text-xs font-mono text-gray-500 hidden">
-                준비 중
+            <div class="flex items-center gap-3">
+                <div id="save-status" class="text-[10px] font-bold text-emerald-600 hidden items-center bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full shadow-sm">
+                    <span>💾 저장됨</span>
+                </div>
+                <button onclick="clearSavedConfig()" class="text-xs text-gray-400 hover:text-red-400 underline hidden md:block">초기화</button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 overflow-y-auto no-scrollbar relative max-w-md mx-auto w-full bg-gray-50">
+    <!-- Main Content (Reduced max-width to 5xl for focus) -->
+    <main class="flex-1 overflow-hidden relative w-full max-w-5xl mx-auto md:p-6">
         
         <!-- VIEW 1: SETUP SCREEN -->
-        <section id="view-setup" class="p-6 h-full flex flex-col justify-center animate-fade-in">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h2 class="text-lg font-bold mb-4 text-gray-700">📋 관찰 설정</h2>
+        <section id="view-setup" class="p-4 h-full flex flex-col justify-center items-center animate-fade-in overflow-y-auto">
+            <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 w-full max-w-lg transition-all">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                        <span>📋</span> 관찰 준비
+                    </h2>
+                    <span class="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">Step 1</span>
+                </div>
                 
-                <div class="space-y-4">
+                <div class="space-y-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-500 mb-1">학생 이름</label>
-                        <input type="text" id="student-name" placeholder="예: 김사랑" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                        <label class="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">학생 이름</label>
+                        <input type="text" id="student-name" placeholder="예: 김사랑" class="w-full h-14 px-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none transition text-lg font-bold text-gray-700 placeholder-gray-300">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-500 mb-1">관찰 목표 행동 (최대 3개)</label>
-                        <div class="space-y-2">
-                            <input type="text" id="behavior-1" value="눈 맞춤 하기" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" placeholder="행동 1">
-                            <input type="text" id="behavior-2" value="바른 자세 유지" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" placeholder="행동 2 (선택)">
-                            <input type="text" id="behavior-3" value="" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" placeholder="행동 3 (선택)">
+                        <label class="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">관찰 목표 행동</label>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 items-center group">
+                                <button onclick="openIconPicker(1)" id="icon-btn-1" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">👀</button>
+                                <input type="hidden" id="icon-val-1" value="👀">
+                                <input type="text" id="behavior-1" value="눈 맞춤 하기" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 1">
+                            </div>
+                            <div class="flex gap-3 items-center group">
+                                <button onclick="openIconPicker(2)" id="icon-btn-2" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">👂</button>
+                                <input type="hidden" id="icon-val-2" value="👂">
+                                <input type="text" id="behavior-2" value="바른 자세 유지" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 2">
+                            </div>
+                            <div class="flex gap-3 items-center group">
+                                <button onclick="openIconPicker(3)" id="icon-btn-3" class="w-14 h-14 flex-shrink-0 bg-white rounded-2xl text-3xl flex items-center justify-center border-2 border-gray-200 group-hover:border-emerald-400 group-hover:bg-emerald-50 transition shadow-sm active:scale-95">✨</button>
+                                <input type="hidden" id="icon-val-3" value="✨">
+                                <input type="text" id="behavior-3" value="" class="flex-1 h-14 px-4 border-2 border-gray-100 rounded-2xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 outline-none font-bold text-gray-700 transition" placeholder="행동 3 (선택)">
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <button onclick="startSession()" class="w-full mt-8 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition transform btn-press-effect flex justify-center items-center">
-                    <span>관찰 시작하기</span>
-                    <span class="ml-2">⏱️</span>
+                <button onclick="startSession()" class="w-full mt-10 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xl py-4 rounded-2xl shadow-xl shadow-emerald-200 transition transform btn-press-effect flex justify-center items-center gap-2">
+                    <span>시작하기</span>
+                    <span class="text-2xl">🚀</span>
                 </button>
-            </div>
-            
-            <p class="text-center text-xs text-gray-400 mt-6">
-                입력한 데이터는 브라우저에 임시 저장되며,<br>서버로 전송되지 않습니다.
-            </p>
-        </section>
-
-        <!-- VIEW 2: TRACKING SCREEN (Hidden by default) -->
-        <section id="view-tracking" class="hidden h-full flex flex-col p-4">
-            
-            <!-- Timer & Info Card -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm mb-4 shrink-0 flex justify-between items-center border border-gray-100">
-                <div>
-                    <div class="text-xs text-gray-400" id="tracking-student-name">학생: -</div>
-                    <div class="text-3xl font-mono font-bold text-gray-800" id="timer-display">00:00</div>
-                </div>
-                <button onclick="finishSession()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-700 transition">
-                    종료 및 결과
-                </button>
-            </div>
-
-            <!-- Counter Buttons Area -->
-            <div class="flex-1 flex flex-col gap-3 justify-center mb-4">
-                <!-- Buttons will be injected here -->
-                <div id="buttons-container" class="grid grid-cols-1 gap-3 h-full max-h-[60vh]"></div>
-            </div>
-
-            <!-- Recent Log (Small) -->
-            <div class="bg-white rounded-xl p-3 h-32 overflow-hidden shadow-inner border border-gray-100 shrink-0 flex flex-col">
-                <div class="flex justify-between items-center mb-2 border-b pb-1">
-                    <span class="text-xs font-bold text-gray-400">최근 기록</span>
-                    <button onclick="undoLastLog()" class="text-xs text-red-400 font-bold hover:text-red-600">↩ 실행 취소</button>
-                </div>
-                <ul id="log-list" class="flex-1 overflow-y-auto text-sm space-y-1 text-gray-600 font-mono">
-                    <li class="text-center text-gray-300 py-2 text-xs">기록된 행동이 없습니다.</li>
-                </ul>
             </div>
         </section>
 
-        <!-- VIEW 3: REPORT SCREEN (Hidden by default) -->
-        <section id="view-report" class="hidden h-full flex flex-col p-4 overflow-y-auto">
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6" id="report-card">
-                <div class="flex justify-between items-end mb-6 border-b pb-4">
-                    <div>
-                        <h2 class="text-2xl font-bold text-emerald-800">관찰 결과 보고서</h2>
-                        <p class="text-sm text-gray-500" id="report-date">2023. 00. 00</p>
+        <!-- VIEW 2: TRACKING SCREEN (BIG CARD Layout) -->
+        <section id="view-tracking" class="hidden h-full flex-col md:flex-row p-4 md:p-0 gap-6">
+            
+            <!-- LEFT PANEL: Active Buttons -->
+            <div class="flex-1 flex flex-col h-full min-h-0">
+                <!-- Top Info Bar -->
+                <div class="bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-100 flex justify-between items-center shrink-0 mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl">👤</div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 block leading-none mb-1">STUDENT</span>
+                            <span class="text-xl font-bold text-gray-800 leading-none" id="tracking-student-name">김사랑</span>
+                        </div>
                     </div>
                     <div class="text-right">
-                        <div class="text-xs text-gray-400">총 관찰 시간</div>
-                        <div class="text-xl font-mono font-bold text-emerald-600" id="report-duration">00:00</div>
+                        <span class="text-xs font-bold text-gray-400 block leading-none mb-1">TIME</span>
+                        <span class="text-2xl font-mono font-bold text-emerald-600 tabular-nums leading-none" id="timer-display">00:00</span>
                     </div>
                 </div>
 
-                <!-- Chart Container -->
-                <div class="mb-6 relative h-64 w-full">
-                    <canvas id="resultChart"></canvas>
+                <!-- Visual Buttons Area (BIG CARDS) -->
+                <div class="flex-1 overflow-y-auto no-scrollbar pb-2">
+                    <!-- Changed Grid to max 2 cols for bigger cards -->
+                    <div id="buttons-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full md:h-auto content-start">
+                        <!-- Dynamic Buttons with Stickers -->
+                    </div>
                 </div>
-
-                <!-- Summary Table -->
-                <table class="w-full text-sm text-left text-gray-600 rounded-lg overflow-hidden">
-                    <thead class="bg-gray-50 text-gray-400 uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-2">행동 명</th>
-                            <th class="px-4 py-2 text-right">빈도(회)</th>
-                            <th class="px-4 py-2 text-right">비율</th>
-                        </tr>
-                    </thead>
-                    <tbody id="report-table-body">
-                        <!-- Rows injected by JS -->
-                    </tbody>
-                </table>
             </div>
 
-            <button onclick="location.reload()" class="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-emerald-100 mb-4 hover:bg-emerald-600 transition">
-                새로운 관찰 시작하기
-            </button>
-            <button onclick="window.print()" class="w-full bg-white text-gray-600 border border-gray-300 py-3 rounded-xl font-bold hover:bg-gray-50 transition">
-                보고서 인쇄 / PDF 저장
-            </button>
+            <!-- RIGHT PANEL: Sidebar (Logs) -->
+            <div class="h-48 md:h-full md:w-80 shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-600 text-sm flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> 기록 (Log)
+                    </h3>
+                    <div class="flex gap-2">
+                         <button onclick="undoLastLog()" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 transition shadow-sm">
+                            ↩ 취소
+                        </button>
+                        <button onclick="finishSession()" class="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition shadow-sm">
+                            종료
+                        </button>
+                    </div>
+                </div>
+                <ul id="log-list" class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50/50"></ul>
+            </div>
         </section>
+
+        <!-- VIEW 3: REPORT SCREEN -->
+        <section id="view-report" class="hidden h-full flex-col overflow-y-auto no-scrollbar p-4 md:p-0">
+            <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-6 w-full">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-100 pb-6 gap-6">
+                    <div>
+                        <h2 class="text-3xl font-black text-gray-800 mb-2">📊 관찰 리포트</h2>
+                        <div class="flex gap-4 text-sm text-gray-500 font-medium">
+                            <span id="report-date">2023. 00. 00</span>
+                            <span class="text-gray-300">|</span>
+                            <span>총 시간: <span id="report-duration" class="text-emerald-600 font-bold">00:00</span></span>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 w-full md:w-auto">
+                        <button onclick="restartApp()" class="flex-1 md:flex-none px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-200 transition">새 관찰</button>
+                        <button onclick="window.print()" class="flex-1 md:flex-none px-6 py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition">인쇄</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 h-80 relative">
+                        <canvas id="resultChart"></canvas>
+                    </div>
+                    <div class="overflow-hidden rounded-2xl border border-gray-100">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="bg-gray-100 text-gray-500 uppercase text-xs font-bold">
+                                <tr>
+                                    <th class="px-6 py-4">행동</th>
+                                    <th class="px-6 py-4 text-right">빈도</th>
+                                    <th class="px-6 py-4 text-right">비율</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-table-body" class="bg-white divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ICON PICKER MODAL -->
+        <div id="icon-picker-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center animate-fade-in backdrop-blur-sm">
+            <div class="bg-white w-full max-w-xl h-[70vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="text-xl font-black text-gray-800">아이콘 선택</h3>
+                    <button onclick="closeIconPicker()" class="w-8 h-8 rounded-full bg-white hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold shadow-sm">&times;</button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-6 bg-white custom-scroll">
+                    <div class="space-y-6">
+                        <!-- Categories -->
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">🏫 학교 생활</h4>
+                            <div class="icon-grid">
+                                <button onclick="selectIcon('👀')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">👀</button>
+                                <button onclick="selectIcon('👂')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">👂</button>
+                                <button onclick="selectIcon('🪑')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🪑</button>
+                                <button onclick="selectIcon('✋')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">✋</button>
+                                <button onclick="selectIcon('✏️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">✏️</button>
+                                <button onclick="selectIcon('🎒')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🎒</button>
+                                <button onclick="selectIcon('📒')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">📒</button>
+                                <button onclick="selectIcon('🏫')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🏫</button>
+                                <button onclick="selectIcon('🍱')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🍱</button>
+                                <button onclick="selectIcon('🚽')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-indigo-100 transition">🚽</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">🏃 행동 / 활동</h4>
+                            <div class="icon-grid">
+                                <button onclick="selectIcon('🚶')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🚶</button>
+                                <button onclick="selectIcon('🏃')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🏃</button>
+                                <button onclick="selectIcon('🗣️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🗣️</button>
+                                <button onclick="selectIcon('🤫')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🤫</button>
+                                <button onclick="selectIcon('🤝')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🤝</button>
+                                <button onclick="selectIcon('🙅')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🙅</button>
+                                <button onclick="selectIcon('🙆')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🙆</button>
+                                <button onclick="selectIcon('🎨')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🎨</button>
+                                <button onclick="selectIcon('🧩')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🧩</button>
+                                <button onclick="selectIcon('🧸')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-amber-100 transition">🧸</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">❤️ 보상 / 감정</h4>
+                            <div class="icon-grid">
+                                <button onclick="selectIcon('✨')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">✨</button>
+                                <button onclick="selectIcon('⭐')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">⭐</button>
+                                <button onclick="selectIcon('❤️')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">❤️</button>
+                                <button onclick="selectIcon('👍')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">👍</button>
+                                <button onclick="selectIcon('😀')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">😀</button>
+                                <button onclick="selectIcon('😢')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">😢</button>
+                                <button onclick="selectIcon('😡')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">😡</button>
+                                <button onclick="selectIcon('💊')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">💊</button>
+                                <button onclick="selectIcon('💤')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">💤</button>
+                                <button onclick="selectIcon('❓')" class="text-3xl p-3 bg-gray-50 rounded-xl hover:bg-pink-100 transition">❓</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </main>
 
     <script>
         // --- State Management ---
-        const state = {
+        let state = {
             studentName: '',
             behaviors: [],
-            startTime: null,
+            startTime: null, 
             endTime: null,
             timerInterval: null,
-            logs: [], // { behaviorId, behaviorName, timestamp, timeString }
-            counts: {} // { behaviorId: count }
+            logs: [], 
+            counts: {}, 
+            isTracking: false 
         };
 
         const colors = [
-            { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200', active: 'bg-indigo-200' },
-            { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200', active: 'bg-pink-200' },
-            { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200', active: 'bg-amber-200' }
+            { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100', sticker: '⭐', hover: 'hover:border-indigo-300' },
+            { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-100', sticker: '🌸', hover: 'hover:border-pink-300' },
+            { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100', sticker: '🐣', hover: 'hover:border-amber-300' }
         ];
 
-        // --- DOM Elements ---
-        const views = {
-            setup: document.getElementById('view-setup'),
-            tracking: document.getElementById('view-tracking'),
-            report: document.getElementById('view-report')
-        };
-        const timerDisplay = document.getElementById('timer-display');
-        const logList = document.getElementById('log-list');
+        // --- Persistence Logic ---
+        const STORAGE_KEY_CONFIG = 'behaviorApp_config_v6';
+        const STORAGE_KEY_SESSION = 'behaviorApp_session_v6';
 
-        // --- Functions: Navigation & Setup ---
+        const els = {
+            views: {
+                setup: document.getElementById('view-setup'),
+                tracking: document.getElementById('view-tracking'),
+                report: document.getElementById('view-report')
+            },
+            timerDisplay: document.getElementById('timer-display'),
+            logList: document.getElementById('log-list'),
+            saveStatus: document.getElementById('save-status'),
+            iconPickerModal: document.getElementById('icon-picker-modal')
+        };
+
+        let currentPickingId = null;
+
+        // --- Functions ---
+
+        function openIconPicker(id) {
+            currentPickingId = id;
+            els.iconPickerModal.classList.remove('hidden');
+            els.iconPickerModal.classList.add('flex');
+        }
+
+        function closeIconPicker() {
+            els.iconPickerModal.classList.add('hidden');
+            els.iconPickerModal.classList.remove('flex');
+            currentPickingId = null;
+        }
+
+        function selectIcon(icon) {
+            if (currentPickingId) {
+                document.getElementById(`icon-btn-${currentPickingId}`).textContent = icon;
+                document.getElementById(`icon-val-${currentPickingId}`).value = icon;
+                saveConfig();
+            }
+            closeIconPicker();
+        }
+
+        function saveConfig() {
+            const config = {
+                studentName: document.getElementById('student-name').value,
+                b1: document.getElementById('behavior-1').value,
+                icon1: document.getElementById('icon-val-1').value,
+                b2: document.getElementById('behavior-2').value,
+                icon2: document.getElementById('icon-val-2').value,
+                b3: document.getElementById('behavior-3').value,
+                icon3: document.getElementById('icon-val-3').value,
+            };
+            localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
+        }
+
+        function loadConfig() {
+            const saved = localStorage.getItem(STORAGE_KEY_CONFIG);
+            if (saved) {
+                const config = JSON.parse(saved);
+                if(config.studentName) document.getElementById('student-name').value = config.studentName;
+                
+                if(config.b1) document.getElementById('behavior-1').value = config.b1;
+                if(config.icon1) { document.getElementById('icon-val-1').value = config.icon1; document.getElementById('icon-btn-1').textContent = config.icon1; }
+
+                if(config.b2) document.getElementById('behavior-2').value = config.b2;
+                if(config.icon2) { document.getElementById('icon-val-2').value = config.icon2; document.getElementById('icon-btn-2').textContent = config.icon2; }
+
+                if(config.b3) document.getElementById('behavior-3').value = config.b3;
+                if(config.icon3) { document.getElementById('icon-val-3').value = config.icon3; document.getElementById('icon-btn-3').textContent = config.icon3; }
+            }
+        }
+
+        function clearSavedConfig() {
+            if(confirm('모든 설정을 초기화하시겠습니까?')) {
+                localStorage.removeItem(STORAGE_KEY_CONFIG);
+                location.reload();
+            }
+        }
+
+        function saveSession() {
+            const sessionData = { ...state, isTracking: true };
+            localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(sessionData));
+            
+            els.saveStatus.classList.remove('hidden');
+            els.saveStatus.classList.add('flex');
+            setTimeout(() => {
+                els.saveStatus.classList.add('hidden');
+                els.saveStatus.classList.remove('flex');
+            }, 1500);
+        }
+
         function switchView(viewName) {
-            Object.values(views).forEach(el => el.classList.add('hidden'));
-            views[viewName].classList.remove('hidden');
+            Object.values(els.views).forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            });
+            const target = els.views[viewName];
+            target.classList.remove('hidden');
+            target.classList.add('flex');
         }
 
         function startSession() {
-            // 1. Get Input Data
             state.studentName = document.getElementById('student-name').value || '학생';
-            const b1 = document.getElementById('behavior-1').value.trim();
-            const b2 = document.getElementById('behavior-2').value.trim();
-            const b3 = document.getElementById('behavior-3').value.trim();
+            
+            const inputs = [
+                { name: document.getElementById('behavior-1').value.trim(), icon: document.getElementById('icon-val-1').value },
+                { name: document.getElementById('behavior-2').value.trim(), icon: document.getElementById('icon-val-2').value },
+                { name: document.getElementById('behavior-3').value.trim(), icon: document.getElementById('icon-val-3').value }
+            ];
 
             state.behaviors = [];
-            if (b1) state.behaviors.push({ id: 'b1', name: b1, color: colors[0] });
-            if (b2) state.behaviors.push({ id: 'b2', name: b2, color: colors[1] });
-            if (b3) state.behaviors.push({ id: 'b3', name: b3, color: colors[2] });
+            inputs.forEach((input, index) => {
+                if (input.name) {
+                    state.behaviors.push({
+                        id: `b${index+1}`,
+                        name: input.name,
+                        icon: input.icon,
+                        color: colors[index]
+                    });
+                }
+            });
 
             if (state.behaviors.length === 0) {
                 alert('최소 1개의 행동을 입력해주세요.');
                 return;
             }
 
-            // 2. Initialize State
+            saveConfig();
             state.behaviors.forEach(b => state.counts[b.id] = 0);
             state.logs = [];
-            document.getElementById('tracking-student-name').textContent = `학생: ${state.studentName}`;
+            state.startTime = Date.now();
             
-            // 3. Render Buttons
+            document.getElementById('tracking-student-name').textContent = state.studentName;
             renderButtons();
             
-            // 4. Start Timer
-            state.startTime = new Date();
+            saveSession();
             startTimer();
-            
-            // 5. Switch View
             switchView('tracking');
         }
 
+        // --- Visual Token Rendering (BIG CARDS) ---
         function renderButtons() {
             const container = document.getElementById('buttons-container');
             container.innerHTML = '';
             
             state.behaviors.forEach(b => {
-                const btn = document.createElement('button');
-                // Dynamic sizing based on number of buttons
-                const heightClass = state.behaviors.length === 1 ? 'h-full' : (state.behaviors.length === 2 ? 'h-40' : 'h-32');
+                const btn = document.createElement('div');
+                const count = state.counts[b.id] || 0;
                 
-                btn.className = `w-full ${heightClass} rounded-2xl border-b-4 shadow-sm transition-all flex flex-col items-center justify-center btn-press-effect relative overflow-hidden group ${b.color.bg} ${b.color.border}`;
-                btn.onclick = () => recordBehavior(b);
+                let visualTokensHtml = '';
+                const maxVisuals = 50; 
+                const displayCount = Math.min(count, maxVisuals);
+                
+                for(let i=0; i<displayCount; i++) {
+                    const extraMargin = (i > 0 && i % 5 === 0) ? 'ml-3' : '';
+                    visualTokensHtml += `<span class="token-animate text-3xl leading-none ${extraMargin}">⭐</span>`;
+                }
+
+                if (count > maxVisuals) {
+                    visualTokensHtml += `<span class="text-xl font-bold bg-white/50 px-2 rounded ml-2">+${count - maxVisuals}</span>`;
+                }
+
+                btn.className = `
+                    relative w-full min-h-[240px] md:h-full rounded-3xl border-2 transition-all duration-100 
+                    flex flex-col p-5 cursor-pointer select-none btn-press-effect active:scale-[0.98] shadow-sm hover:shadow-md
+                    ${b.color.bg} ${b.color.border} ${b.color.hover}
+                `;
+                
+                btn.onclick = (e) => {
+                    recordBehavior(b);
+                };
 
                 btn.innerHTML = `
-                    <div class="text-3xl mb-2 group-active:scale-110 transition-transform">👆</div>
-                    <div class="text-xl font-bold ${b.color.text}">${b.name}</div>
-                    <div class="text-sm ${b.color.text} opacity-60 mt-1 font-mono">현재: <span id="count-${b.id}">0</span>회</div>
-                    <div class="absolute inset-0 bg-white opacity-0 group-active:opacity-20 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4 pointer-events-none">
+                        <div class="flex items-center gap-3">
+                            <span class="text-5xl filter drop-shadow-sm">${b.icon}</span>
+                            <span class="text-2xl md:text-3xl font-black ${b.color.text} leading-tight">${b.name}</span>
+                        </div>
+                        <div class="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-sm border border-white/50">
+                            <span id="num-count-${b.id}" class="text-4xl font-black ${b.color.text} tabular-nums">${count}</span>
+                        </div>
+                    </div>
+                    
+                    <div id="sticker-board-${b.id}" class="flex-1 bg-white/40 rounded-2xl p-4 flex flex-wrap content-start items-start gap-1 pointer-events-none shadow-inner min-h-[120px]">
+                        ${count === 0 ? '<span class="text-gray-400/50 text-base font-bold w-full text-center mt-8">터치하여 스티커 붙이기</span>' : visualTokensHtml}
+                    </div>
+                    
+                    <div class="absolute inset-0 bg-white opacity-0 hover:opacity-10 active:opacity-20 transition-opacity rounded-3xl pointer-events-none"></div>
                 `;
                 container.appendChild(btn);
             });
         }
 
-        // --- Functions: Tracking ---
         function startTimer() {
-            state.timerInterval = setInterval(() => {
-                const now = new Date();
-                const diff = Math.floor((now - state.startTime) / 1000);
-                const mm = String(Math.floor(diff / 60)).padStart(2, '0');
-                const ss = String(diff % 60).padStart(2, '0');
-                timerDisplay.textContent = `${mm}:${ss}`;
-            }, 1000);
+            if (state.timerInterval) clearInterval(state.timerInterval);
+            updateTimerDisplay();
+            state.timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const now = Date.now();
+            const diff = Math.floor((now - state.startTime) / 1000);
+            if (diff < 0) { els.timerDisplay.textContent = "00:00"; return; }
+            const mm = String(Math.floor(diff / 60)).padStart(2, '0');
+            const ss = String(diff % 60).padStart(2, '0');
+            els.timerDisplay.textContent = `${mm}:${ss}`;
         }
 
         function recordBehavior(behavior) {
-            // Update Count
-            state.counts[behavior.id]++;
-            document.getElementById(`count-${behavior.id}`).textContent = state.counts[behavior.id];
+            state.counts[behavior.id] = (state.counts[behavior.id] || 0) + 1;
+            
+            const count = state.counts[behavior.id];
+            
+            // Update Number
+            const numEl = document.getElementById(`num-count-${behavior.id}`);
+            if(numEl) numEl.textContent = count;
 
-            // Add Log
-            const now = new Date();
-            const elapsed = Math.floor((now - state.startTime) / 1000);
-            const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
-            const ss = String(elapsed % 60).padStart(2, '0');
-            const timeString = `${mm}:${ss}`;
+            // Update Stickers
+            const board = document.getElementById(`sticker-board-${behavior.id}`);
+            if(board) {
+                if(count === 1) board.innerHTML = ''; 
+                
+                if (count <= 50) {
+                    const span = document.createElement('span');
+                    span.className = `token-animate text-3xl leading-none ${(count > 1 && (count-1) % 5 === 0) ? 'ml-3' : ''}`;
+                    span.textContent = '⭐';
+                    board.appendChild(span);
+                } else {
+                    renderButtons(); 
+                }
+            }
+
+            const now = Date.now();
+            const diff = Math.floor((now - state.startTime) / 1000);
+            const mm = String(Math.floor(diff / 60)).padStart(2, '0');
+            const ss = String(diff % 60).padStart(2, '0');
 
             state.logs.push({
                 behaviorId: behavior.id,
                 behaviorName: behavior.name,
+                behaviorIcon: behavior.icon,
                 timestamp: now,
-                timeString: timeString,
+                timeString: `${mm}:${ss}`,
                 colorClass: behavior.color.text
             });
 
             updateLogDisplay();
+            saveSession();
         }
 
         function updateLogDisplay() {
-            logList.innerHTML = '';
-            // Show last 10 logs reversed
-            [...state.logs].reverse().slice(0, 50).forEach(log => {
+            els.logList.innerHTML = '';
+            [...state.logs].reverse().forEach(log => {
                 const li = document.createElement('li');
-                li.className = "flex justify-between items-center border-b border-gray-100 py-1 last:border-0";
+                li.className = "flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm animate-fade-in mb-2";
                 li.innerHTML = `
-                    <span class="font-bold ${log.colorClass}">${log.behaviorName}</span>
-                    <span class="text-gray-400 font-mono text-xs">${log.timeString}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl bg-gray-50 p-1.5 rounded-lg border border-gray-100">${log.behaviorIcon}</span>
+                        <span class="font-bold text-gray-700 text-sm">${log.behaviorName}</span>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded border border-gray-100">${log.timeString}</span>
                 `;
-                logList.appendChild(li);
+                els.logList.appendChild(li);
             });
             if (state.logs.length === 0) {
-                logList.innerHTML = '<li class="text-center text-gray-300 py-2 text-xs">기록된 행동이 없습니다.</li>';
+                els.logList.innerHTML = '<li class="text-center text-gray-400 py-10 text-sm font-medium">기록 없음</li>';
             }
         }
 
         function undoLastLog() {
             if (state.logs.length === 0) return;
             const lastLog = state.logs.pop();
-            state.counts[lastLog.behaviorId]--;
-            document.getElementById(`count-${lastLog.behaviorId}`).textContent = state.counts[lastLog.behaviorId];
+            if (state.counts[lastLog.behaviorId] > 0) {
+                state.counts[lastLog.behaviorId]--;
+                renderButtons();
+            }
             updateLogDisplay();
+            saveSession();
         }
 
         function finishSession() {
-            if (!confirm('관찰을 종료하고 결과를 확인하시겠습니까?')) return;
-            
+            if (!confirm('관찰을 종료하시겠습니까?')) return;
             clearInterval(state.timerInterval);
-            state.endTime = new Date();
-            
+            state.endTime = Date.now();
+            const sessionData = { ...state, isTracking: false };
+            localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(sessionData));
             renderReport();
             switchView('report');
         }
 
-        // --- Functions: Report & Chart ---
         function renderReport() {
-            // Date & Time
             const now = new Date();
-            document.getElementById('report-date').textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-            document.getElementById('report-duration').textContent = timerDisplay.textContent;
+            document.getElementById('report-date').textContent = now.toLocaleDateString();
+            document.getElementById('report-duration').textContent = els.timerDisplay.textContent;
 
-            // Table
             const tbody = document.getElementById('report-table-body');
             tbody.innerHTML = '';
             
             const totalCounts = Object.values(state.counts).reduce((a, b) => a + b, 0);
 
             state.behaviors.forEach(b => {
-                const count = state.counts[b.id];
+                const count = state.counts[b.id] || 0;
                 const percentage = totalCounts > 0 ? Math.round((count / totalCounts) * 100) : 0;
                 
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-gray-100 last:border-0";
                 tr.innerHTML = `
-                    <td class="px-4 py-3 font-medium text-gray-800">${b.name}</td>
-                    <td class="px-4 py-3 text-right font-bold text-emerald-600">${count}</td>
-                    <td class="px-4 py-3 text-right text-gray-400 text-xs">${percentage}%</td>
+                    <td class="px-6 py-4 font-bold text-gray-700 flex items-center gap-3">
+                        <span class="text-2xl">${b.icon}</span> ${b.name}
+                    </td>
+                    <td class="px-6 py-4 text-right font-black text-emerald-600 text-xl">
+                        ${count} <span class="text-xs font-normal text-gray-400 ml-0.5">stars</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-medium text-gray-500">${percentage}%</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             // Chart
-            const ctx = document.getElementById('resultChart').getContext('2d');
-            new Chart(ctx, {
+            const chartContainer = document.querySelector('.bg-gray-50.rounded-2xl.p-4');
+            chartContainer.innerHTML = '<canvas id="resultChart"></canvas>';
+            
+            new Chart(document.getElementById('resultChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: state.behaviors.map(b => b.name),
                     datasets: [{
-                        label: '발생 횟수',
-                        data: state.behaviors.map(b => state.counts[b.id]),
-                        backgroundColor: [
-                            'rgba(79, 70, 229, 0.6)', // Indigo
-                            'rgba(236, 72, 153, 0.6)', // Pink
-                            'rgba(245, 158, 11, 0.6)'  // Amber
-                        ],
-                        borderColor: [
-                            'rgb(79, 70, 229)',
-                            'rgb(236, 72, 153)',
-                            'rgb(245, 158, 11)'
-                        ],
-                        borderWidth: 1,
+                        label: '획득한 스티커',
+                        data: state.behaviors.map(b => state.counts[b.id] || 0),
+                        backgroundColor: ['rgba(79, 70, 229, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(245, 158, 11, 0.7)'],
                         borderRadius: 8,
+                        barThickness: 40
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.parsed.y + '회';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 }
-                        }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
                 }
             });
         }
+
+        function restartApp() {
+            location.reload();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            const savedSession = localStorage.getItem(STORAGE_KEY_SESSION);
+            if (savedSession) {
+                try {
+                    const data = JSON.parse(savedSession);
+                    if (data.isTracking) {
+                        state = { ...state, ...data };
+                        document.getElementById('tracking-student-name').textContent = state.studentName;
+                        renderButtons();
+                        updateLogDisplay();
+                        startTimer();
+                        switchView('tracking');
+                    }
+                } catch(e) { localStorage.removeItem(STORAGE_KEY_SESSION); }
+            }
+        });
+
     </script>
 </body>
 </html>
